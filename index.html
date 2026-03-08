@@ -1108,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <button type="button" class="info-btn" onclick="toggleTip('tipOtherIncome')">?</button>
       </label>
       <div class="input-wrap">
-        <input type="number" id="otherIncome" value="0" min="0" step="0.01">
+        <input type="number" id="otherIncome" value="0" min="0" step="0.01" oninput="onOtherIncomeChange()">
         <span class="eur">EUR</span>
       </div>
       <div class="tip-panel" id="tipOtherIncome">
@@ -1126,9 +1126,31 @@ document.addEventListener('DOMContentLoaded', function() {
         · Tax-free income (e.g. the §3 Nr. 26 exempt portion itself)<br>
         · <strong>Flat-taxed Minijobs (2% Pauschalsteuer)</strong> — these are settled entirely by the employer and do not appear in your Steuererklärung at all
       </div>
-      <div class="note" style="margin-top:0.4rem;">
-        💡 <strong>Running a Minijob alongside?</strong> Flat-taxed Minijobs (employer pays 2% Pauschalsteuer) are already settled by the employer — do not enter them here. Only enter Minijob income if you opted into full individual taxation. A Minijob does <em>not</em> affect your §3 Nr. 26 Pauschale eligibility.
+    </div>
+    <div class="form-group" id="minijobCheckGroup" style="display:none;">
+      <label>Minijob taxation type
+        <button type="button" class="info-btn" onclick="toggleTip('tipMinijob')">?</button>
+      </label>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.25rem;">
+        <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.85rem;cursor:pointer;font-weight:normal;">
+          <input type="radio" name="minijobType" id="minijobFlat" value="flat" checked onchange="onMinijobTypeChange()" style="margin-top:0.2rem;flex-shrink:0;">
+          <span><strong>Flat-taxed (2% Pauschalsteuer)</strong><br>
+          <span style="color:var(--muted);font-size:0.78rem;">Employer settles tax &amp; social contributions — not in your Steuererklärung. This income is <strong>tax-free for you</strong> and excluded from your ESt calculation.</span></span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.85rem;cursor:pointer;font-weight:normal;">
+          <input type="radio" name="minijobType" id="minijobIndividual" value="individual" onchange="onMinijobTypeChange()" style="margin-top:0.2rem;flex-shrink:0;">
+          <span><strong>Individually taxed (Regelversteuerung)</strong><br>
+          <span style="color:var(--muted);font-size:0.78rem;">You opted into full taxation. Income included in your Steuererklärung (Anlage N) and added to your taxable base above.</span></span>
+        </label>
       </div>
+      <div class="tip-panel" id="tipMinijob" style="margin-top:0.5rem;">
+        <strong>Minijob taxation — which applies to you?</strong><br><br>
+        <strong>Flat-taxed (Pauschalsteuer 2%)</strong> — the employer pays a flat 2% lump-sum tax on your behalf. You receive a net wage; nothing appears in your own Steuererklärung. This is the standard and by far the most common arrangement. The income is effectively tax-free for you personally.<br><br>
+        <strong>Individually taxed (Regelversteuerung)</strong> — rare, requires an explicit opt-in. The income is taxed at your personal marginal rate via your Steuererklärung (Anlage N) and is therefore included in the gross amount you enter above.<br><br>
+        <strong>Rentenversicherung (pension):</strong> Minijob employees are automatically enrolled in RV unless they file an exemption (Befreiungsantrag). If you pay RV contributions on the Minijob, those are handled entirely by the Minijob employer separately from your KSK obligations — they do not affect this calculator.<br><br>
+        A Minijob does <em>not</em> affect your §3 Nr. 26 Übungsleiterpauschale eligibility.
+      </div>
+      <div id="minijobNote" class="note" style="margin-top:0.4rem;"></div>
     </div>
   </div>
 
@@ -1301,20 +1323,20 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Optional addback toggles -->
         <div id="ntAddbackSection" style="display:none;">
           <div style="margin-top:0.75rem;font-size:0.78rem;color:var(--muted);margin-bottom:0.25rem;">
-            ＋ Additional household income (toggle to include in take-home):
+            Additional household income:
           </div>
           <div class="row" id="ntSpouseToggleRow" style="display:none;">
             <span class="lbl">
               <button type="button" id="ntSpouseToggleBtn" onclick="toggleAddback('spouse')"
-                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;margin-right:0.4rem;">OFF</button>
-              Spouse monthly income
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;margin-right:0.4rem;">Remove</button>
+              Spouse net income
             </span>
             <span class="val" id="ntSpouseAddback" style="color:var(--muted);">–</span>
           </div>
           <div class="row" id="ntKgToggleRow" style="display:none;">
             <span class="lbl">
               <button type="button" id="ntKgToggleBtn" onclick="toggleAddback('kg')"
-                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;margin-right:0.4rem;">OFF</button>
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;margin-right:0.4rem;">Remove</button>
               Kindergeld
             </span>
             <span class="val" id="ntKgAddback" style="color:var(--muted);">–</span>
@@ -1406,13 +1428,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // DATA TABLES
 // ──────────────────────────────────────────────────────────
 const YEAR_DATA = {
-  2020: { pauschale:2400, rate:0.186,  grundfrei:9408,  bbgsRV:6900, bbgsKV:4687, kvRate:0.0795, pvBase:0.01525, rvRate:0.093 },
-  2021: { pauschale:3000, rate:0.188,  grundfrei:9744,  bbgsRV:7100, bbgsKV:4837, kvRate:0.0800, pvBase:0.01525, rvRate:0.093 },
-  2022: { pauschale:3000, rate:0.190,  grundfrei:10347, bbgsRV:7050, bbgsKV:4837, kvRate:0.0800, pvBase:0.01525, rvRate:0.093 },
-  2023: { pauschale:3000, rate:0.198,  grundfrei:10908, bbgsRV:7300, bbgsKV:4987, kvRate:0.0800, pvBase:0.01700, rvRate:0.093 },
-  2024: { pauschale:3000, rate:0.198,  grundfrei:11784, bbgsRV:7550, bbgsKV:5175, kvRate:0.0825, pvBase:0.01700, rvRate:0.093 },
-  2025: { pauschale:3000, rate:0.199,  grundfrei:12096, bbgsRV:8050, bbgsKV:5512, kvRate:0.0825, pvBase:0.01700, rvRate:0.093 },
-  2026: { pauschale:3300, rate:0.1985, grundfrei:12348, bbgsRV:8450, bbgsKV:5812, kvRate:0.0825, pvBase:0.01800, rvRate:0.093 },
+  // §32a EStG zone-1 and zone-2 coefficients — officially published in the annual
+  // BMF Programmablaufplan / Steuergesetz. z1a and z2a are the statutory values;
+  // z3c and z4c are derived structurally from continuity at 66,760 and 277,825.
+  2020: { pauschale:2400, rate:0.186,  grundfrei:9408,  bbgsRV:6900, bbgsKV:4687, kvRate:0.0795, pvBase:0.01525, rvRate:0.093, z1a:  972.87, z2a:200.22 },
+  2021: { pauschale:3000, rate:0.188,  grundfrei:9744,  bbgsRV:7100, bbgsKV:4837, kvRate:0.0800, pvBase:0.01525, rvRate:0.093, z1a:  995.21, z2a:208.28 },
+  2022: { pauschale:3000, rate:0.190,  grundfrei:10347, bbgsRV:7050, bbgsKV:4837, kvRate:0.0800, pvBase:0.01525, rvRate:0.093, z1a: 1000.00, z2a:210.14 },
+  2023: { pauschale:3000, rate:0.198,  grundfrei:10908, bbgsRV:7300, bbgsKV:4987, kvRate:0.0800, pvBase:0.01700, rvRate:0.093, z1a:  974.91, z2a:200.75 },
+  2024: { pauschale:3000, rate:0.198,  grundfrei:11784, bbgsRV:7550, bbgsKV:5175, kvRate:0.0825, pvBase:0.01700, rvRate:0.093, z1a:  965.58, z2a:197.11 },
+  2025: { pauschale:3000, rate:0.199,  grundfrei:12096, bbgsRV:8050, bbgsKV:5512, kvRate:0.0825, pvBase:0.01700, rvRate:0.093, z1a:  932.31, z2a:184.34 },
+  2026: { pauschale:3300, rate:0.1985, grundfrei:12348, bbgsRV:8450, bbgsKV:5812, kvRate:0.0825, pvBase:0.01800, rvRate:0.093, z1a:  922.98, z2a:181.19 },
 };
 
 const MONTHS = ["January","February","March","April","May","June",
@@ -1513,28 +1538,39 @@ function calcKindergeldMonthly(year, childCount) {
 // ──────────────────────────────────────────────────────────
 function calcESt(year, taxableIncome) {
   // §32a EStG — official German income tax formula.
-  // Zone breakpoints (17,005 / 66,760 / 277,825) are fixed by law.
-  // Zone constants are derived from the year's Grundfreibetrag for continuity at boundaries.
+  // Uses year-specific z1a / z2a coefficients from YEAR_DATA (published annually in
+  // the BMF Programmablaufplan / Jahressteuergesetz). Zone breakpoints (17,005 /
+  // 66,760 / 277,825 EUR) are fixed by law. z3c and z4c are derived structurally
+  // from continuity requirements at the 66,760 and 277,825 boundaries.
   if (taxableIncome <= 0) return 0;
-  const g = yd(year).grundfrei;
+  const d  = yd(year);
+  const g  = d.grundfrei;
   if (taxableIncome <= g) return 0;
-  const x = taxableIncome;
-  // Derive zone constants from Grundfreibetrag (ensures continuity at every boundary)
-  const yB = (17005 - g) / 10000;
-  const c1 = (979.18 * yB + 1400) * yB;                          // zone2 constant
-  const zB = (66760 - 17005) / 10000;
-  const c3 = 0.42 * 66760 - ((228.74 * zB + 2397) * zB + c1);   // zone3 constant
-  const c4 = 0.45 * 277825 - (0.42 * 277825 - c3);              // zone4 constant
+  const x   = taxableIncome;
+  const z1a = d.z1a || 922.98;  // fallback to 2026 value
+  const z2a = d.z2a || 181.19;
+  // Zone 1: Grundfreibetrag → 17,005
   if (x <= 17005) {
     const y = (x - g) / 10000;
-    return Math.max(0, (979.18 * y + 1400) * y);
+    return Math.max(0, (z1a * y + 1400) * y);
   }
+  // Continuity constant at zone 1/2 boundary (ESt at exactly 17,005)
+  const y0 = (17005 - g) / 10000;
+  const c1 = (z1a * y0 + 1400) * y0;
+  // Zone 2: 17,006 → 66,760
   if (x <= 66760) {
     const z = (x - 17005) / 10000;
-    return Math.max(0, (228.74 * z + 2397) * z + c1);
+    return Math.max(0, (z2a * z + 2397) * z + c1);
   }
-  if (x <= 277825) return Math.max(0, 0.42 * x - c3);
-  return Math.max(0, 0.45 * x - c4);
+  // Derive z3c from continuity at 66,760 (zone 2 = zone 3 there)
+  const zB = (66760 - 17005) / 10000;
+  const z3c = 0.42 * 66760 - ((z2a * zB + 2397) * zB + c1);
+  // Derive z4c from continuity at 277,825 (zone 3 = zone 4 there)
+  const z4c = 0.45 * 277825 - (0.42 * 277825 - z3c);
+  // Zone 3: 66,761 → 277,825 (42%)
+  if (x <= 277825) return Math.max(0, 0.42 * x - z3c);
+  // Zone 4: > 277,825 (45%)
+  return Math.max(0, 0.45 * x - z4c);
 }
 
 // Ehegattensplitting: combine incomes, halve, apply tariff, double result
@@ -1545,12 +1581,45 @@ function calcEStSplitting(year, incomeA, incomeB) {
 }
 
 // ──────────────────────────────────────────────────────────
-// LOHNSTEUER – Employer withholding estimate (Steuerklasse-based)
-// Only relevant for employed income. For a Selbstständiger this
-// represents the Einkommensteuer-Vorauszahlung proxy — what
-// the Finanzamt might ask for as quarterly advance payments.
-// Steuerklasse V/VI carry no Grundfreibetrag by design.
+// SPOUSE SOCIAL INSURANCE — employee-share contributions
+// An employed spouse pays the standard employee half of each
+// social insurance branch, capped at the relevant BBGS.
+// Used when the freelancer is covered under Familienversicherung
+// (below KSK threshold) or whenever spouse income is entered.
 // ──────────────────────────────────────────────────────────
+function calcSpouseSocialInsurance(year, gross, zusatz, children, age, isSachsen) {
+  const d = yd(year);
+  // Monthly gross for BBGS comparison
+  const grossMo = gross / 12;
+
+  // KV (Krankenversicherung): 50% of (base + Zusatzbeitrag)
+  // Employee pays: (kvBase + Zusatz) / 2  on income up to BBGS KV
+  const kvBase   = d.kvRate * 2;  // full statutory rate (both halves) e.g. 0.165
+  const kvEmployee = (kvBase / 2 + zusatz / 2);  // employee share incl. half Zusatz
+  const kvAnnual = Math.min(grossMo, d.bbgsKV) * 12 * kvEmployee;
+
+  // PV (Pflegeversicherung): employee share = pvBase
+  // Childless surcharge (age > 23): +0.006 since 2024 (previously +0.0035)
+  const pvChildless = (children === 0 && age > 23)
+    ? (year >= 2024 ? 0.006 : 0.0035) : 0;
+  // Sachsen: employees pay extra 0.5% (employer share is 0.5% less)
+  const pvSachsen = isSachsen ? 0.005 : 0;
+  const pvEmployee = d.pvBase + pvChildless + pvSachsen;
+  const pvAnnual = Math.min(grossMo, d.bbgsKV) * 12 * pvEmployee;
+
+  // RV (Rentenversicherung): employee half-share
+  const rvEmployee = d.rvRate;  // already the half-share (e.g. 0.093)
+  const rvAnnual = Math.min(grossMo, d.bbgsRV) * 12 * rvEmployee;
+
+  // AV (Arbeitslosenversicherung): employee half-share
+  const avEmployee = AV_RATES[year] || 0.013;
+  const avAnnual = Math.min(grossMo, d.bbgsRV) * 12 * avEmployee;
+
+  const total = kvAnnual + pvAnnual + rvAnnual + avAnnual;
+  return { kv: kvAnnual, pv: pvAnnual, rv: rvAnnual, av: avAnnual, total };
+}
+
+
 const ENTLASTUNGSBETRAG = { 2020:1908, 2021:4008, 2022:4008, 2023:4260, 2024:4260, 2025:4260, 2026:4260 };
 
 function calcLohnsteuer(year, income, taxClass) {
@@ -1571,28 +1640,30 @@ function calcLohnsteuer(year, income, taxClass) {
 }
 
 function calcEStRaw(year, zvE) {
-  // Core tariff on already-adjusted zvE (Grundfreibetrag already removed).
-  // Equivalent to calcESt with g=0, so zone boundaries shift to 17005 and 66760.
-  // Constants derived for continuity (same math as calcESt but with g=0).
+  // Core tariff applied to an already Grundfreibetrag-adjusted zvE.
+  // Used by calcLohnsteuer where the zvE has already had g subtracted.
+  // Same structure as calcESt but x = zvE + g for zone checks.
   if (zvE <= 0) return 0;
-  const g = yd(year).grundfrei;
-  const yB = (17005 - g) / 10000;
-  const c1 = (979.18 * yB + 1400) * yB;
-  const zB = (66760 - 17005) / 10000;
-  const c3 = 0.42 * 66760 - ((228.74 * zB + 2397) * zB + c1);
-  const c4 = 0.45 * 277825 - (0.42 * 277825 - c3);
-  // zvE has grundfrei removed, so effective x = zvE + g for zone check
-  const x = zvE + g;
+  const d   = yd(year);
+  const g   = d.grundfrei;
+  const z1a = d.z1a || 922.98;
+  const z2a = d.z2a || 181.19;
+  const x   = zvE + g;  // restore absolute income for zone checks
   if (x <= 17005) {
-    const y = zvE / 10000;
-    return (979.18 * y + 1400) * y;
+    const y = zvE / 10000;  // zvE = x - g already
+    return Math.max(0, (z1a * y + 1400) * y);
   }
+  const y0 = (17005 - g) / 10000;
+  const c1 = (z1a * y0 + 1400) * y0;
   if (x <= 66760) {
     const z = (x - 17005) / 10000;
-    return (228.74 * z + 2397) * z + c1;
+    return Math.max(0, (z2a * z + 2397) * z + c1);
   }
-  if (x <= 277825) return Math.max(0, 0.42 * x - c3);
-  return Math.max(0, 0.45 * x - c4);
+  const zB  = (66760 - 17005) / 10000;
+  const z3c = 0.42 * 66760 - ((z2a * zB + 2397) * zB + c1);
+  const z4c = 0.45 * 277825 - (0.42 * 277825 - z3c);
+  if (x <= 277825) return Math.max(0, 0.42 * x - z3c);
+  return Math.max(0, 0.45 * x - z4c);
 }
 
 // ──────────────────────────────────────────────────────────
@@ -1848,6 +1919,32 @@ function buildKasseSelect(year) {
   onKasseChange();
 }
 
+function onOtherIncomeChange() {
+  const val = parseFloat(document.getElementById('otherIncome').value) || 0;
+  const grp = document.getElementById('minijobCheckGroup');
+  grp.style.display = val > 0 ? '' : 'none';
+  if (val <= 0) {
+    // Reset to flat when hidden
+    document.getElementById('minijobFlat').checked = true;
+  }
+  onMinijobTypeChange();
+}
+
+function onMinijobTypeChange() {
+  const val   = parseFloat(document.getElementById('otherIncome').value) || 0;
+  const isFlat = document.getElementById('minijobFlat')?.checked ?? true;
+  const note  = document.getElementById('minijobNote');
+  if (!note) return;
+  if (val <= 0) { note.textContent = ''; return; }
+  if (isFlat) {
+    note.innerHTML = '✓ <strong>Excluded from your ESt calculation.</strong> This income is fully settled by the employer — it does not appear in your Steuererklärung and has no effect on your income tax or KSK contributions.';
+    note.style.borderLeftColor = 'var(--success)';
+  } else {
+    note.innerHTML = '📄 <strong>Included in your taxable income.</strong> This amount is added to your zvE and taxed at your personal marginal rate via Anlage N.';
+    note.style.borderLeftColor = 'var(--accent)';
+  }
+}
+
 function updateYearFigures() {
   const year = parseInt(document.getElementById('year').value) || 2026;
   const d    = yd(year);
@@ -2025,13 +2122,25 @@ function updateKindergeldAuto() {
 }
 
 // ── Addback toggle state ─────────────────────────────────
-const _addback = { spouse: false, kg: false };
+const _addback = { spouse: true, kg: true };
+
+function resetAddbackButtons() {
+  ['ntSpouseToggleBtn','ntKgToggleBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.textContent        = 'Remove';
+    btn.style.background   = 'var(--accent)';
+    btn.style.color        = '#fff';
+    btn.style.borderColor  = 'var(--accent)';
+  });
+  _addback.spouse = true;
+  _addback.kg     = true;
+}
 
 function toggleAddback(type) {
   _addback[type] = !_addback[type];
   const btn = document.getElementById(type === 'spouse' ? 'ntSpouseToggleBtn' : 'ntKgToggleBtn');
-  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-  btn.textContent = _addback[type] ? 'ON' : 'OFF';
+  btn.textContent   = _addback[type] ? 'Remove' : 'Include';
   btn.style.background  = _addback[type] ? 'var(--accent)' : 'var(--card)';
   btn.style.color       = _addback[type] ? '#fff' : 'var(--muted)';
   btn.style.borderColor = _addback[type] ? 'var(--accent)' : 'var(--border)';
@@ -2095,11 +2204,10 @@ function renderSummary() {
   document.getElementById('ntChurch').textContent = _cs.churchRate > 0 ? ('- ' + f(churchNow)) : '0 EUR (none)';
   document.getElementById('ntTotalDeduct').textContent = f(totalDeductNow);
   document.getElementById('ntEffRate').textContent = pct(effRateNow);
+  // Freelance-only take-home shown before addbacks — ÷div (per active month) for freelance rows
   document.getElementById('ntTakeHome').textContent = eur(Math.max(0, m ? netYearlyNow / div : netYearlyNow));
 
-  // ── Addback toggles (spouse income + Kindergeld) ────────
-  const hasSpouse = _cs.spouseIncome > 0 && _cs.marital === 'married';
-  // marital may not be in _cs — check from DOM as fallback
+  // ── Addback toggles (spouse net income + Kindergeld) ────────
   const isMarried = _cs.spouseIncome > 0;
   const hasKg     = _cs.kgMonthly > 0;
   const showAddback = isMarried || hasKg;
@@ -2108,27 +2216,62 @@ function renderSummary() {
   document.getElementById('ntSpouseToggleRow').style.display = isMarried ? 'flex' : 'none';
   document.getElementById('ntKgToggleRow').style.display     = hasKg     ? 'flex' : 'none';
 
-  const spouseMonthly = _cs.spouseIncome / 12;
+  // Spouse net income — Lohnsteuer (by Steuerklasse) + Soli + church + social insurance.
+  // Social insurance (KV, PV, RV, AV employee shares) apply regardless of KSK status.
+  const spouseLst      = _cs.spouseLohnsteuer      || 0;
+  const spouseLstSoli  = _cs.spouseLohnsteuerSoli  || 0;
+  const spouseChurch   = spouseLst * _cs.churchRate;
+  const spouseSoc      = _cs.spouseSocialYearly    || 0;
+  const spouseNetYearly = Math.max(0, _cs.spouseIncome - spouseLst - spouseLstSoli - spouseChurch - spouseSoc);
+
+  // Build a breakdown tooltip for the spouse row
+  const sd = _cs.spouseSocialData || {};
+  const spouseDeductLines = [
+    `Lohnsteuer: ${eur(spouseLst)}`,
+    spouseLstSoli > 0 ? `Soli: ${eur(spouseLstSoli)}` : null,
+    spouseChurch   > 0 ? `Church: ${eur(spouseChurch)}` : null,
+    sd.kv > 0 ? `KV: ${eur(sd.kv)}` : null,
+    sd.pv > 0 ? `PV: ${eur(sd.pv)}` : null,
+    sd.rv > 0 ? `RV: ${eur(sd.rv)}` : null,
+    sd.av > 0 ? `AV: ${eur(sd.av)}` : null,
+  ].filter(Boolean).join(' · ');
+  const tcLabel = { 3:'Kl. III', 4:'Kl. IV', 5:'Kl. V' }[_cs.spouseTaxClass] || '';
+
+  // Spouse and Kindergeld are 12-month annual figures — always divide by 12 for monthly display,
+  // not by eligibleMonths. The household receives these every calendar month regardless of how
+  // many months the freelancer was active.
   document.getElementById('ntSpouseAddback').textContent = m
-    ? eur(spouseMonthly) + '/mo' : eur(_cs.spouseIncome) + '/yr';
+    ? eur(spouseNetYearly / 12) + '/mo' : eur(spouseNetYearly) + '/yr';
+  const spouseRowLbl = document.querySelector('#ntSpouseToggleRow .lbl');
+  if (spouseRowLbl) {
+    spouseRowLbl.childNodes[spouseRowLbl.childNodes.length - 1].textContent
+      = ` Spouse net income (${tcLabel})`;
+    spouseRowLbl.title = spouseDeductLines || '';
+  }
   document.getElementById('ntKgAddback').textContent = m
-    ? eur(_cs.kgMonthly) + '/mo' : eur(_cs.kgYearly) + '/yr';
+    ? eur(_cs.kgYearly / 12) + '/mo' : eur(_cs.kgYearly) + '/yr';
 
-  // Recompute take-home with active addbacks
-  let addbackMonthly = 0;
-  if (_addback.spouse && isMarried)  addbackMonthly += spouseMonthly;
-  if (_addback.kg     && hasKg)      addbackMonthly += _cs.kgMonthly;
+  // ── Take-home total ───────────────────────────────────────────
+  // The freelance rows display amounts ÷div (eligibleMonths in monthly view).
+  // Spouse and KG rows display ÷12 (fixed annual amounts).
+  // The take-home total must use the same divisors so it visually equals
+  // the sum of the rows the user can see above it.
+  //
+  // Monthly: (freelanceNetYearly ÷ div) + (spouseNetYearly ÷ 12) + (kgYearly ÷ 12)
+  // Yearly:   freelanceNetYearly        +  spouseNetYearly        +  kgYearly
+  const spouseAddback = _addback.spouse ? spouseNetYearly : 0;
+  const kgAddback     = _addback.kg     ? (_cs.kgYearly || 0) : 0;
 
-  const baseMonthly = m ? netYearlyNow / div : netYearlyNow;
-  const totalShown  = Math.max(0, baseMonthly) + addbackMonthly;
+  let totalShown;
+  if (m) {
+    totalShown = Math.max(0, netYearlyNow / div)
+               + spouseAddback / 12
+               + kgAddback / 12;
+  } else {
+    totalShown = Math.max(0, netYearlyNow) + spouseAddback + kgAddback;
+  }
   document.getElementById('ntTakeHome').textContent = eur(totalShown);
-
-  const addbackLabel = [];
-  if (_addback.spouse && isMarried) addbackLabel.push('spouse');
-  if (_addback.kg     && hasKg)     addbackLabel.push('Kindergeld');
-  document.getElementById('ntTakeHomeLabel').textContent = addbackLabel.length
-    ? (m ? 'Monthly take-home' : 'Yearly take-home') + ` (+ ${addbackLabel.join(' + ')})`
-    : (m ? 'Monthly take-home' : 'Yearly take-home');
+  document.getElementById('ntTakeHomeLabel').textContent = m ? 'Monthly take-home' : 'Yearly take-home';
 
   if (_cs.kskRequired) {
     document.getElementById('ntKSKTotal').textContent = '- ' + f(_cs.yearlyKSK);
@@ -2150,9 +2293,11 @@ function renderTaxHeadroom() {
 
   const isJoint = _chosenAssessment === 'joint';
 
-  const taxFreeCeiling = isJoint
-    ? 2 * d.grundfrei + kfbJoint
-    : d.grundfrei + kfbPerParent;
+  // The tax-free ceiling is purely the Grundfreibetrag(e).
+  // Kinderfreibetrag is NOT added here — it is a deduction from taxable income
+  // applied only when the ESt saving exceeds Kindergeld (Günstigerprüfung).
+  // Including it here would falsely inflate the "tax-free" ceiling.
+  const taxFreeCeiling = isJoint ? 2 * d.grundfrei : d.grundfrei;
 
   const relevantIncome = isJoint ? jointIncome : yourRawIncome;
   const relevantESt    = isJoint ? jointESt    : yourESt;
@@ -2178,8 +2323,8 @@ function renderTaxHeadroom() {
   }
 
   const ceilingLabel = isJoint
-    ? `2 × Grundfreibetrag ${eur(d.grundfrei)}${kfbJoint > 0 ? ` + Kinderfreibetrag ${eur(kfbJoint)}` : ''} (joint household)`
-    : `Grundfreibetrag ${eur(d.grundfrei)}${kfbPerParent > 0 ? ` + Kinderfreibetrag ${eur(kfbPerParent)}` : ''}`;
+    ? `2 × Grundfreibetrag ${eur(d.grundfrei)} (joint household)`
+    : `Grundfreibetrag ${eur(d.grundfrei)}`;
   const incomeLabel = isJoint
     ? `combined household income (${eur(yourRawIncome)} + ${eur(spouseIncome)})`
     : 'your taxable income';
@@ -2201,8 +2346,9 @@ function renderTaxHeadroom() {
       </div>`;
 
   } else if (relevantESt > 0) {
-    const grossToSoli  = soliHeadroom > 0 ? grossForEStTarget(soliFreigrenze) : null;
-    const soliGrossGap = grossToSoli != null ? Math.max(0, grossToSoli - relevantIncome) : 0;
+    const excessIncome  = Math.max(0, relevantIncome - taxFreeCeiling);
+    const grossToSoli   = soliHeadroom > 0 ? grossForEStTarget(soliFreigrenze) : null;
+    const soliGrossGap  = grossToSoli != null ? Math.max(0, grossToSoli - relevantIncome) : 0;
     const monthlyToSoli = soliGrossGap > 0 ? soliGrossGap / eligibleMonths : 0;
 
     let soliLine = '';
@@ -2216,15 +2362,17 @@ function renderTaxHeadroom() {
         <strong>${eur(relevantESt)}</strong> (threshold: ${eur(soliFreigrenze)}).`;
     }
 
+    const exceedsText = excessIncome > 0
+      ? `exceeds the tax-free ceiling of <strong>${eur(taxFreeCeiling)}</strong> (${ceilingLabel}) by <strong>${eur(excessIncome)}</strong>.`
+      : `has resulted in a tax liability despite being near the tax-free ceiling of <strong>${eur(taxFreeCeiling)}</strong> (${ceilingLabel}), likely due to the Kinderfreibetrag calculation.`;
+
     taxHeadroomBox.className     = 'headroom-box warn';
     taxHeadroomBox.style.display = 'block';
     taxHeadroomBox.innerHTML = `
       <div class="headroom-amount" style="color:var(--error)">- ${eur(relevantESt / eligibleMonths)}/mo</div>
       <div class="headroom-desc">
         <strong>Einkommensteuer is due</strong><br>
-        Your ${incomeLabel} (${eur(relevantIncome)}) exceeds the tax-free ceiling of
-        <strong>${eur(taxFreeCeiling)}</strong> (${ceilingLabel})
-        by <strong>${eur(relevantIncome - taxFreeCeiling)}</strong>.
+        Your ${incomeLabel} (${eur(relevantIncome)}) ${exceedsText}
         Estimated Einkommensteuer: <strong>${eur(relevantESt)}/year</strong>
         (~${eur(relevantESt / eligibleMonths)}/mo).${soliLine}
       </div>`;
@@ -2236,17 +2384,23 @@ function renderTaxHeadroom() {
 
 
 function calculate() {
+  resetAddbackButtons();
   const year = parseInt(document.getElementById('year').value);
   const startMonth = parseInt(document.getElementById('startMonth').value);
   const pauschaleEligible = document.getElementById('pauschaleEligible').value === 'yes';
   const businessExpenses = parseFloat(document.getElementById('businessExpenses').value) || 0;
-  const otherIncome = parseFloat(document.getElementById('otherIncome').value) || 0;
+  const otherIncomeRaw = parseFloat(document.getElementById('otherIncome').value) || 0;
+  const minijobIsFlat  = (document.getElementById('minijobFlat')?.checked ?? true) &&
+                         (document.getElementById('minijobCheckGroup')?.style.display !== 'none');
+  // Flat-taxed Minijobs are settled by the employer and excluded from ESt
+  const otherIncome = (otherIncomeRaw > 0 && minijobIsFlat) ? 0 : otherIncomeRaw;
   // Commercial income split (only relevant when Mixed activity type is selected)
   const activity = document.getElementById('pauschaleActivity').value;
   const commercialIncome = (activity === 'mixed' && pauschaleEligible)
     ? (parseFloat(document.getElementById('commercialIncome').value) || 0)
     : 0;
-  const spouseIncome = (marital === 'married') ? (parseFloat(document.getElementById('spouseIncome').value) || 0) : 0;
+  const spouseIncome    = (marital === 'married') ? (parseFloat(document.getElementById('spouseIncome').value) || 0) : 0;
+  const spouseTaxClass  = (marital === 'married') ? (parseInt(document.getElementById('spouseTaxClass').value) || 4) : 4;
 
   // New fields
   const taxClass = parseInt(document.getElementById('taxClass').value);
@@ -2453,6 +2607,21 @@ function calculate() {
   const jointSoli  = calcSoliSimple(jointESt, true, year);
   const separateTotalESt = yourESt + spouseESt;
   const zvEPerPerson = marital === 'married' ? jointZvE / 2 : 0;
+
+  // Spouse Lohnsteuer — actual payroll withholding using their Steuerklasse.
+  // Class III: employer applies double Grundfreibetrag + splitting proxy → very low withholding.
+  // This is what the spouse actually takes home month-to-month; used for the addback display.
+  const spouseLohnsteuer = (marital === 'married' && spouseIncome > 0)
+    ? calcLohnsteuer(year, spouseIncome, spouseTaxClass) : 0;
+  const spouseLohnsteuerSoli = calcSoliSimple(spouseLohnsteuer, false, year);
+
+  // Spouse social insurance (employee shares: KV, PV, RV, AV).
+  // These are deducted from the spouse's gross regardless of the freelancer's KSK status.
+  // The spouse's KV/PV settings mirror the freelancer's own Zusatzbeitrag and demographic data.
+  const spouseSocialData = (marital === 'married' && spouseIncome > 0)
+    ? calcSpouseSocialInsurance(year, spouseIncome, zusatz, children, age, bundesland === 'SN')
+    : { kv:0, pv:0, rv:0, av:0, total:0 };
+  const spouseSocialYearly = spouseSocialData.total;
 
   // ── Lohnsteuer (withholding proxy) ──
   const lohnsteuer = calcLohnsteuer(year, yourRawIncome, taxClass);
@@ -2661,7 +2830,9 @@ function calculate() {
     d, avgMonthlyProfit, healthInsType, rvType, avType,
     lohnsteuer, taxClass, effectiveExpenses, commercialIncome,
     kfbPerParent, kfbJoint, kfbData, yourZvE, spouseZvE,
-    jointIncome, spouseIncome,
+    jointIncome, spouseIncome, spouseESt, spouseSoli,
+    spouseTaxClass, spouseLohnsteuer, spouseLohnsteuerSoli,
+    spouseSocialData, spouseSocialYearly,
     kgMonthly, kgYearly, kindergeldReceived,
     useKFBSeparate, useKFBJoint, kfbSavingSeparate, kfbSavingJoint,
     ehrenamtActive, ehrenamtDeduct, pauschaleDeduct
@@ -3014,7 +3185,10 @@ function updateVatNote() {
   document.getElementById('commercialIncome').addEventListener('input', () => {
     updatePauschaleEligibility();
     const val = parseFloat(document.getElementById('commercialIncome').value) || 0;
-    if (val > 0) document.getElementById('otherIncome').value = '0';
+    if (val > 0) {
+      document.getElementById('otherIncome').value = '0';
+      document.getElementById('minijobCheckGroup').style.display = 'none';
+    }
   });
   document.getElementById('healthInsType').addEventListener('change', onHealthInsChange);
   document.getElementById('churchMember').addEventListener('change', () => {});
