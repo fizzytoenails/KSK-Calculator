@@ -1,0 +1,2545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSK Calculator 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131927;
+    --surface2: #1a2235;
+    --border: rgba(99,132,180,0.18);
+    --accent: #4fc3f7;
+    --accent2: #81d4fa;
+    --text: #e2eaf7;
+    --muted: #7a94b8;
+    --success: #43d68f;
+    --warn: #f5c842;
+    --error: #f5536a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1rem 4rem;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .container { max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 2rem; }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 1.8rem;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+  header p { color: var(--muted); font-size: 0.9rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title .badge {
+    background: rgba(79,195,247,0.12);
+    border: 1px solid rgba(79,195,247,0.3);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    color: var(--accent);
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .form-row.thirds { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 600px) {
+    .form-row, .form-row.thirds { grid-template-columns: 1fr; }
+  }
+  .form-group { margin-bottom: 1rem; }
+  .form-group:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.02em;
+  }
+  label .legal { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); margin-left: 0.4rem; }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    padding: 0.6rem 0.75rem;
+    transition: border-color 0.2s, opacity 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234fc3f7' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  input:disabled, select:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .input-dimmed input, .input-dimmed select { opacity: 0.35; pointer-events: none; }
+
+  .note {
+    background: rgba(79,195,247,0.06);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+  .note strong { color: var(--accent); }
+
+  /* Year figures bar */
+  .year-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    background: rgba(79,195,247,0.05);
+    border: 1px solid rgba(79,195,247,0.15);
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .year-bar span { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+
+  /* Month grid */
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.65rem;
+    margin-top: 1rem;
+  }
+  @media (max-width: 640px) { .month-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .month-cell { display: flex; flex-direction: column; }
+  .month-cell label {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+  .month-cell.future label::after {
+    content: " ↗";
+    color: var(--warn);
+  }
+  .month-cell.disabled label { opacity: 0.3; }
+
+  /* Toggle for single/married */
+  .toggle-group { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
+  .toggle-group button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    padding: 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0;
+  }
+  .toggle-group button.active {
+    background: rgba(79,195,247,0.15);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .toggle-group button:hover:not(.active) { background: rgba(255,255,255,0.04); }
+
+  /* Calculate button */
+  .calc-btn {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 0.9rem;
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+  .calc-btn:hover { background: var(--accent2); }
+  .calc-btn:active { transform: scale(0.99); }
+
+  /* Results */
+  .results { display: none; margin-top: 1.5rem; }
+  .results.show { display: block; }
+
+  .status-box {
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    border: 2px solid var(--border);
+  }
+  .status-box.success { background: rgba(67,214,143,0.08); border-color: var(--success); }
+  .status-box.warning { background: rgba(245,200,66,0.08); border-color: var(--warn); }
+  .status-box.error   { background: rgba(245,83,106,0.08); border-color: var(--error); }
+
+  .status-label { font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.3rem; }
+  .status-headline { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .success .status-headline { color: var(--success); }
+  .warning .status-headline { color: var(--warn); }
+  .error   .status-headline { color: var(--error); }
+  .status-desc { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+
+  .breakdown {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-title {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.35rem 0;
+    font-size: 0.88rem;
+    border-bottom: 1px solid rgba(99,132,180,0.08);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .lbl { color: var(--muted); }
+  .row .val { font-family: var(--mono); font-weight: 600; color: var(--text); }
+  .row.total .lbl { color: var(--text); font-weight: 600; }
+  .row.total .val { color: var(--accent); font-size: 1rem; }
+  .row.highlight .val { color: var(--success); }
+  .row.deduct .val { color: var(--error); }
+
+  .rec-box {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+  }
+  .rec-box h3 { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .rec-box ul { list-style: none; }
+  .rec-box li { color: var(--muted); font-size: 0.85rem; padding: 0.25rem 0; padding-left: 1.1rem; position: relative; }
+  .rec-box li::before { content: "›"; position: absolute; left: 0; color: var(--accent); }
+  .rec-box li strong { color: var(--text); }
+  .rec-box a { color: var(--accent); }
+
+  /* Tax results section */
+  .tax-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  @media (max-width: 560px) { .tax-comparison { grid-template-columns: 1fr; } }
+  .tax-panel {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+  }
+  .tax-panel h4 { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem; }
+  .tax-panel.best { border-color: var(--success); }
+  .tax-panel.best h4 { color: var(--success); }
+  .tax-panel.best h4::after { content: " ★ LOWER"; font-size: 0.65rem; color: var(--success); }
+
+  /* Netto breakdown card */
+  .netto-big {
+    font-family: var(--mono);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--success);
+    margin: 0.5rem 0;
+  }
+  .netto-sub { font-size: 0.8rem; color: var(--muted); }
+
+  /* Footer disclaimer */
+  footer {
+    margin-top: 2.5rem;
+    border: 1px solid var(--error);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    background: rgba(245,83,106,0.05);
+  }
+  footer p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  footer strong { color: var(--error); }
+
+  /* Tooltip for BBGS/Mindestbeitrag explanations */
+  .tip-row { cursor: pointer; user-select: none; }
+  .tip-row .lbl { display: flex; align-items: center; gap: 0.4rem; }
+  .tip-row .tip-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.1rem; height: 1.1rem;
+    border-radius: 50%;
+    background: rgba(79,195,247,0.15);
+    border: 1px solid rgba(79,195,247,0.4);
+    font-size: 0.65rem;
+    color: var(--accent);
+    font-family: var(--mono);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .tip-row:hover .tip-icon { background: rgba(79,195,247,0.3); }
+  .tip-panel {
+    display: none;
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 0.6rem 0.85rem;
+    margin: 0.2rem 0 0.5rem 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .tip-panel.open { display: block; }
+  .tip-panel strong { color: var(--accent); }
+
+  /* Summary period toggle */
+  .summary-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .summary-toggle label { margin: 0; font-size: 0.8rem; color: var(--muted); }
+  .summary-toggle select {
+    width: auto;
+    font-size: 0.82rem;
+    padding: 0.35rem 1.8rem 0.35rem 0.6rem;
+  }
+
+  /* Headroom stat */
+  .headroom-box {
+    background: rgba(67,214,143,0.08);
+    border: 1px solid rgba(67,214,143,0.3);
+    border-radius: 8px;
+    padding: 0.85rem 1.1rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .headroom-box.warn { background: rgba(245,200,66,0.08); border-color: rgba(245,200,66,0.35); }
+  .headroom-amount {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--success);
+    white-space: nowrap;
+  }
+  .headroom-box.warn .headroom-amount { color: var(--warn); }
+  .headroom-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+  .headroom-desc strong { color: var(--text); }
+
+  /* Hidden section */
+  .hidden { display: none !important; }
+
+  /* Separator */
+  .sep { height: 1px; background: var(--border); margin: 1rem 0; }
+
+  /* Inline EUR hint */
+  .input-wrap { position: relative; }
+  .input-wrap .eur {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .input-wrap input { padding-right: 2.5rem; }
+
+  /* Info button */
+  .info-btn {
+    background: rgba(79,195,247,0.12);
+    border: 1px solid rgba(79,195,247,0.3);
+    border-radius: 50%;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    vertical-align: middle;
+    margin-left: 0.3rem;
+    flex-shrink: 0;
+  }
+  .info-btn:hover { background: rgba(79,195,247,0.28); }
+
+  /* ─── Teaching Calculator ─── */
+  #teachingCalc {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.2rem;
+  }
+  .tc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+  .tc-title {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Desktop: 8-column header + row grid */
+  .tc-col-headers {
+    display: grid;
+    grid-template-columns: 1.8fr 1.4fr 1.4fr 1.4fr 1.2fr 1fr 1.2fr 1.8rem;
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+  }
+  .tc-col-headers span {
+    font-size: 0.69rem;
+    color: var(--muted);
+    padding: 0 0.1rem;
+  }
+  .tc-row {
+    display: grid;
+    grid-template-columns: 1.8fr 1.4fr 1.4fr 1.4fr 1.2fr 1fr 1.2fr 1.8rem;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+  .tc-row input, .tc-row select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.42rem 0.5rem;
+    width: 100%;
+    min-width: 0;
+  }
+  .tc-row select { padding-right: 1.6rem; background-size: 10px; background-position: right 0.4rem center; }
+  .tc-row input:focus, .tc-row select:focus { border-color: var(--accent); outline: none; }
+  .tc-row-result {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--success);
+    text-align: right;
+    padding-right: 0.1rem;
+    white-space: nowrap;
+  }
+  .tc-remove {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.15rem;
+    cursor: pointer;
+    padding: 0.1rem 0.3rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tc-remove:hover { color: var(--error); }
+
+  /* Shared input style used by JS-created rows */
+  .tc-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.42rem 0.5rem;
+    width: 100%;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .tc-input[type="number"] { -moz-appearance: textfield; }
+  select.tc-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234fc3f7' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.4rem center;
+    padding-right: 1.5rem;
+  }
+  .tc-input:focus { border-color: var(--accent); outline: none; }
+
+  /* Mobile field labels — hidden on desktop/tablet, shown on mobile */
+  .tc-mobile-label {
+    display: none;
+    font-size: 0.69rem;
+    color: var(--muted);
+    margin-bottom: 0.2rem;
+    font-family: var(--sans);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .tc-add-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 1px dashed rgba(79,195,247,0.4);
+    border-radius: 6px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+  }
+  .tc-add-btn:hover { border-color: var(--accent); background: rgba(79,195,247,0.06); }
+
+  .tc-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .tc-totals {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .tc-totals-label { font-size: 0.78rem; color: var(--muted); }
+  .tc-totals-val {
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+  #calcResult {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    color: var(--success);
+    font-weight: 700;
+  }
+  .tc-apply-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Mobile: stack each variation row as a card with field labels */
+  @media (max-width: 520px) {
+    body { padding: 1rem 0.65rem 3rem; }
+    .card { padding: 1rem; }
+    header h1 { font-size: 1.35rem; }
+    .tc-col-headers { display: none; }
+    .tc-row {
+      display: flex !important;
+      flex-direction: column;
+      gap: 0;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.65rem 0.75rem 0.65rem 0.75rem;
+      margin-bottom: 0.55rem;
+      position: relative;
+    }
+    .tc-row > div { margin-bottom: 0.45rem; }
+    .tc-row > div:last-child { margin-bottom: 0; }
+    .tc-mobile-label { display: block; }
+    .tc-input { font-size: 0.9rem; padding: 0.52rem 0.6rem; }
+    select.tc-input { padding-right: 1.8rem; }
+    .tc-row-result {
+      text-align: left !important;
+      font-size: 0.9rem;
+      padding: 0.2rem 0;
+      border-top: 1px solid var(--border);
+      margin-top: 0.1rem;
+      color: var(--success);
+    }
+    .tc-row-result::before { content: "→ "; color: var(--muted); }
+    .tc-remove {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+    .tc-footer { flex-direction: column; align-items: flex-start; gap: 0.65rem; }
+    .tc-totals { gap: 0.4rem; flex-wrap: wrap; }
+    .tc-apply-bar { flex-direction: column; }
+    .tc-apply-bar button { width: 100%; text-align: center; justify-content: center; }
+    .fill-bar { flex-direction: column; align-items: flex-start !important; }
+    .fill-bar .input-wrap { max-width: 100% !important; width: 100%; }
+    .fill-bar button { width: 100%; }
+    .netto-big { font-size: 1.55rem; }
+    .status-headline { font-size: 1.15rem; }
+    .headroom-amount { font-size: 1.25rem; }
+    .tax-comparison { grid-template-columns: 1fr; }
+    .form-row, .form-row.thirds { grid-template-columns: 1fr; }
+    .year-bar { gap: 0.75rem; }
+    .summary-toggle { flex-wrap: wrap; }
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 760px) and (min-width: 521px) {
+    body { padding: 1.25rem 0.85rem 3rem; }
+    .card { padding: 1.25rem; }
+    .tc-col-headers { grid-template-columns: 1.4fr 1.4fr 1.4fr 1.2fr 1fr 1.2fr 1.8rem; }
+    .tc-col-headers .tc-hdr-label { display: none; }
+    .tc-row { grid-template-columns: 1.4fr 1.4fr 1.4fr 1.2fr 1fr 1.2fr 1.8rem; }
+    .tc-row .tc-cell-label { display: none; }
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .form-row.thirds { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Small mobile extras */
+  @media (max-width: 400px) {
+    header h1 { font-size: 1.15rem; }
+    .card { padding: 0.85rem; }
+    .card-title { font-size: 0.82rem; }
+    .netto-big { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>KSK Calculator</h1>
+  <p>Künstlersozialkasse eligibility & contribution estimator · German freelancers &amp; artists</p>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     CARD 1 · BASIC INFORMATION
+════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="card-title">01 · Basic Information <span class="badge">Required</span></div>
+
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Tax Year</label>
+      <select id="year">
+        <option value="2020">2020</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Start month (first month working)</label>
+      <select id="startMonth">
+        <option value="1">January</option><option value="2">February</option>
+        <option value="3">March</option><option value="4">April</option>
+        <option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option>
+        <option value="9">September</option><option value="10">October</option>
+        <option value="11">November</option><option value="12">December</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Activity type <span class="legal">§3 Nr. 26 EStG</span></label>
+      <select id="pauschaleActivity" onchange="updatePauschaleEligibility()">
+        <option value="qualified">Teaching, coaching, caregiving, arts, or sport – for non-profit/public body</option>
+        <option value="commercial">Commercial freelance work (no qualifying non-profit/public client)</option>
+        <option value="mixed">Mixed – some qualifying, some commercial</option>
+      </select>
+      <div class="note" id="activityNote">
+        §3 Nr. 26 EStG exempts up to <strong><span id="pauschaleNote">3,300</span> EUR/yr</strong> from tax and social contributions — claimed in your <em>Steuererklärung</em>, not a special invoicing method. Applies to teaching, coaching, caregiving, or artistic work for non-profit associations, churches, municipalities, or public-law bodies.
+      </div>
+    </div>
+    <div class="form-group" id="hoursGroup">
+      <label>Average weekly hours on this activity</label>
+      <select id="weeklyHours" onchange="updatePauschaleEligibility()">
+        <option value="under14">Under 14 hrs/week (nebenberuflich ✓)</option>
+        <option value="over14">14 hrs/week or more (may not qualify)</option>
+      </select>
+      <div class="note" id="hoursNote">
+        <strong>Nebenberuflich</strong> means the activity takes up no more than ⅓ of a comparable full-time role — in practice, max. <strong>14 hrs/week averaged over the year</strong>. You do <em>not</em> need another job: students, retirees, unemployed persons, and Hausfrauen/Hausmänner all qualify if the time criterion is met (BMF guidance, §3 Nr. 26).
+      </div>
+    </div>
+  </div>
+
+  <div id="pauschaleResult" class="note" style="margin-top:0;"></div>
+
+  <!-- ── VAT / Umsatzsteuer ── -->
+  <div class="sep"></div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Umsatzsteuer (VAT) obligation
+        <button type="button" class="info-btn" onclick="toggleTip('tipVat')">?</button>
+      </label>
+      <select id="vatStatus" onchange="updateVatNote()">
+        <option value="kleinunternehmer">Kleinunternehmer — VAT exempt (§19 UStG)</option>
+        <option value="regelbesteuert">Regelbesteuerung — I charge and pay VAT</option>
+        <option value="befreit">Activity fully VAT-exempt (§4 UStG)</option>
+      </select>
+      <div class="tip-panel" id="tipVat">
+        <strong>Umsatzsteuer — When do you need to charge VAT?</strong><br><br>
+        <strong>Kleinunternehmerregelung (§19 UStG)</strong> — You pay <em>no VAT</em> if your gross turnover was <strong>≤ €22,000</strong> in the prior year and will be <strong>≤ €50,000</strong> in the current year (2024 law: limits raised from €17,500/€50,000). You must state "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet." on invoices.<br><br>
+        <strong>§4 UStG full exemptions</strong> — Certain activities are <em>always</em> VAT-free regardless of turnover:<br>
+        · Teaching at schools/universities or state-recognised educational bodies<br>
+        · Private tutoring directly from a teacher (§4 Nr. 21b)<br>
+        · Healthcare professionals (doctors, therapists, etc.) — §4 Nr. 14<br>
+        · Certain cultural organisations — §4 Nr. 20<br><br>
+        <strong>Regelbesteuerung</strong> — If you exceed the Kleinunternehmer limits, or opt out voluntarily (Verzicht), you charge <strong>19% VAT</strong> (7% for books, some cultural services) and file quarterly/annual Umsatzsteuervoranmeldung.<br><br>
+        <em>Note: KSK and income tax are calculated on net income before VAT. VAT is not shown in this calculator's deduction summary.</em>
+      </div>
+      <div class="note" id="vatNote" style="margin-top:0.5rem;"></div>
+    </div>
+    <div class="form-group" id="vatTurnoverGroup">
+      <label>Estimated gross annual turnover (EUR)</label>
+      <div class="input-wrap">
+        <input type="number" id="vatTurnover" value="" min="0" step="100" placeholder="e.g. 18000" oninput="updateVatNote()">
+        <span class="eur">EUR</span>
+      </div>
+      <div class="note">Used to assess your Kleinunternehmer eligibility. Does not affect tax/KSK calculations.</div>
+    </div>
+  </div>
+
+  <!-- Commercial income split — only shown for Mixed activity type -->
+  <div id="mixedSplitGroup" class="hidden">
+    <div class="sep"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>
+          Commercial income within this activity (EUR/yr)
+          <button type="button" class="info-btn" onclick="toggleTip('tipMixedSplit')">?</button>
+        </label>
+        <div class="input-wrap">
+          <input type="number" id="commercialIncome" value="0" min="0" step="0.01" placeholder="0.00">
+          <span class="eur">EUR</span>
+        </div>
+        <div class="tip-panel" id="tipMixedSplit">
+          <strong>Mixed activity — commercial income</strong><br><br>
+          Enter commercial income that is <strong>not already in the monthly income grid</strong> (Card 2). The grid should contain your qualifying §3 Nr. 26 income only (invoiced to non-profit / public bodies).<br><br>
+          The §3 Nr. 26 Pauschale is applied in full against the grid income. The commercial amount you enter here is added directly on top as fully taxable — it is never offset by the Pauschale.<br><br>
+          <strong>Example:</strong> Grid = €6,216 from a non-profit choir. You also earn €75 from private lessons (commercial). Enter €75 here.<br>
+          Result: (€6,216 − €3,300) + €75 = <strong>€2,991 taxable profit</strong>.
+        </div>
+        <div class="note" id="mixedSplitNote"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden legacy input kept for JS compatibility -->
+  <input type="hidden" id="pauschaleEligible" value="no">
+
+  <div class="form-row">
+    <div class="form-group" id="expensesGroup">
+      <label>Additional business expenses (EUR/yr)</label>
+      <div class="input-wrap">
+        <input type="number" id="businessExpenses" value="0" min="0" step="0.01" placeholder="0.00">
+        <span class="eur">EUR</span>
+      </div>
+      <div class="note">Equipment, software, travel, materials etc. beyond any Pauschale deduction.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     CARD 2 · MONTHLY GROSS INCOME
+════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="card-title">02 · Monthly Gross Income
+    <span class="badge">EUR</span>
+  </div>
+  <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1rem;">
+    Enter gross freelance income per month. Greyed = before start / disabled. <span style="color:var(--warn)">↗ = future/estimated</span>.
+  </p>
+  <!-- ── Teaching income calculator ── -->
+  <div id="teachingCalc">
+    <div class="tc-header">
+      <div class="tc-title">📐 Teaching Income Calculator</div>
+      <div id="hoursWarning" style="display:none;font-size:0.76rem;font-weight:600;padding:0.25rem 0.65rem;border-radius:4px;"></div>
+    </div>
+
+    <div class="tc-col-headers">
+      <span class="tc-hdr-label">Label</span>
+      <span>Students</span>
+      <span>Rate (€/hr)</span>
+      <span>Duration</span>
+      <span>Sessions/wk</span>
+      <span>Wks/mo</span>
+      <span style="text-align:right;">€/month</span>
+      <span></span>
+    </div>
+
+    <div id="variationRows"></div>
+
+    <div class="tc-footer">
+      <button onclick="addVariationRow()" class="tc-add-btn">
+        <span style="font-size:1rem;line-height:1;">+</span> Add variation
+      </button>
+      <div class="tc-totals">
+        <span class="tc-totals-label">Hrs/week:</span>
+        <span id="totalHrsWeek" class="tc-totals-val">—</span>
+        <span class="tc-totals-label">Total/month:</span>
+        <span id="calcResult">—</span>
+      </div>
+    </div>
+
+    <div id="hoursWarningDetail" style="display:none;margin-top:0.6rem;font-size:0.8rem;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid;"></div>
+
+    <div class="tc-apply-bar">
+      <button onclick="applyToAllMonths()" id="btnApplyAll" disabled style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;cursor:pointer;opacity:0.4;transition:opacity 0.2s;">Apply to all months</button>
+      <button onclick="applyToFutureMonths()" id="btnApplyFuture" disabled style="background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.82rem;cursor:pointer;opacity:0.4;transition:opacity 0.2s;">Future months only</button>
+    </div>
+  </div>
+
+  <!-- ── Manual fill / clear ── -->
+  <div class="fill-bar" style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap;">
+    <span style="font-size:0.78rem;color:var(--muted);">Or fill manually:</span>
+    <div class="input-wrap" style="max-width:150px;">
+      <input type="number" id="fillAllAmount" min="0" step="0.01" placeholder="EUR/month">
+      <span class="eur">EUR</span>
+    </div>
+    <button onclick="fillAllMonths()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:0.45rem 1rem;font-size:0.85rem;font-weight:600;cursor:pointer;">Fill all</button>
+    <button onclick="clearAllMonths()" style="background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.85rem;cursor:pointer;">Clear</button>
+  </div>
+  <div class="month-grid" id="monthGrid"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     CARD 3 · INCOME TAX ESTIMATOR
+════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="card-title">03 · Income Tax Estimator <span class="badge">Estimate only</span></div>
+
+  <div class="form-row thirds">
+    <div class="form-group">
+      <label>Marital status</label>
+      <div class="toggle-group">
+        <button id="btnSingle" class="active" onclick="setMarital('single')">Single</button>
+        <button id="btnMarried" onclick="setMarital('married')">Married</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tax Category (Steuerklasse)</label>
+      <select id="taxClass">
+        <option value="1" selected>Class I – Single, divorced, widowed</option>
+        <option value="2">Class II – Single parent</option>
+        <option value="3">Class III – Married, higher earner</option>
+        <option value="4">Class IV – Married, equal earners</option>
+        <option value="5">Class V – Married, lower earner</option>
+        <option value="6">Class VI – Second job / no card</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Your Age</label>
+      <div class="input-wrap">
+        <input type="number" id="age" value="30" min="16" max="99" step="1">
+        <span class="eur">Y</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Federal State (Bundesland)</label>
+      <select id="bundesland">
+        <option value="BW">Baden-Württemberg</option>
+        <option value="BY">Bayern</option>
+        <option value="BE">Berlin</option>
+        <option value="BB">Brandenburg</option>
+        <option value="HB">Bremen</option>
+        <option value="HH">Hamburg</option>
+        <option value="HE">Hessen</option>
+        <option value="MV">Mecklenburg-Vorpommern</option>
+        <option value="NI">Niedersachsen</option>
+        <option value="NW">Nordrhein-Westfalen</option>
+        <option value="RP">Rheinland-Pfalz</option>
+        <option value="SL">Saarland</option>
+        <option value="SN">Sachsen</option>
+        <option value="ST">Sachsen-Anhalt</option>
+        <option value="SH">Schleswig-Holstein</option>
+        <option value="TH">Thüringen</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Church Tax (Kirchensteuer)</label>
+      <select id="churchMember">
+        <option value="no" selected>No – not a member</option>
+        <option value="yes">Yes – church tax applies</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Children (for Kinderfreibetrag / PV)</label>
+      <select id="children">
+        <option value="0">0 children</option>
+        <option value="0.5">0.5 (shared custody)</option>
+        <option value="1">1 child</option>
+        <option value="1.5">1.5 children</option>
+        <option value="2">2 children</option>
+        <option value="2.5">2.5 children</option>
+        <option value="3">3+ children</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>
+        Your other yearly income (salary, etc.)
+        <button type="button" class="info-btn" onclick="toggleTip('tipOtherIncome')">?</button>
+      </label>
+      <div class="input-wrap">
+        <input type="number" id="otherIncome" value="0" min="0" step="0.01">
+        <span class="eur">EUR</span>
+      </div>
+      <div class="tip-panel" id="tipOtherIncome">
+        <strong>What belongs here — and what doesn't</strong><br><br>
+        This field is for income that is <strong>entirely separate</strong> from the freelance activity entered in the monthly income grid above. It is added to your taxable base for Einkommensteuer purposes.<br><br>
+        <strong>Include here:</strong><br>
+        · Employment salary (Arbeitslohn) from an employer<br>
+        · Rental income (Einkünfte aus Vermietung)<br>
+        · Capital income above Sparerpauschbetrag (Zinsen, Dividenden)<br>
+        · Other self-employment income from a <em>different</em> activity<br><br>
+        <strong>Do not include here:</strong><br>
+        · Income already entered in the monthly grid (Cards 1–2)<br>
+        · The commercial portion of a mixed §3 Nr. 26 activity — that is handled automatically via the "commercial income" field in Card 1 when Mixed is selected<br>
+        · Tax-free income (e.g. the §3 Nr. 26 exempt portion itself)
+      </div>
+    </div>
+  </div>
+
+  <!-- Spouse fields -->
+  <div id="spouseFields" class="hidden">
+    <div class="sep"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Spouse tax class</label>
+        <select id="spouseTaxClass">
+          <option value="3">Class III</option>
+          <option value="4" selected>Class IV</option>
+          <option value="5">Class V</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Spouse yearly gross income</label>
+        <div class="input-wrap">
+          <input type="number" id="spouseIncome" value="0" min="0" step="0.01">
+          <span class="eur">EUR</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Insurance section -->
+  <div class="form-row thirds">
+    <div class="form-group">
+      <label>Health Insurance (Krankenversicherung)</label>
+      <select id="healthInsType">
+        <option value="gkv" selected>Statutory (GKV – pflichtversichert)</option>
+        <option value="gkv_vol">Statutory (GKV – freiwillig)</option>
+        <option value="pkv">Private (PKV)</option>
+      </select>
+    </div>
+    <div class="form-group" id="zusatzGroup">
+      <label>Krankenkasse <small style="color:var(--muted)">(sets Zusatzbeitrag)</small></label>
+      <select id="kasseSelect" onchange="onKasseChange()">
+        <option value="avg">⌀ Durchschnitt 2026 (2.90%)</option>
+        <optgroup label="AOK">
+          <option value="2.99">AOK Baden-Württemberg (2.99%)</option>
+          <option value="2.69">AOK Bayern (2.69%)</option>
+          <option value="3.29">AOK Bremen/Bremerhaven (3.29%)</option>
+          <option value="2.98">AOK Hessen (2.98%)</option>
+          <option value="2.98">AOK Niedersachsen (2.98%)</option>
+          <option value="3.50">AOK Nordost – Berlin/Brandenburg/MV (3.50%)</option>
+          <option value="2.99">AOK NordWest – NRW/Schleswig-Holstein (2.99%)</option>
+          <option value="3.10">AOK PLUS – Sachsen/Thüringen (3.10%)</option>
+          <option value="2.47">AOK Rheinland-Pfalz/Saarland (2.47%)</option>
+          <option value="3.29">AOK Rheinland/Hamburg (3.29%)</option>
+          <option value="2.89">AOK Sachsen-Anhalt (2.89%)</option>
+        </optgroup>
+        <optgroup label="Ersatzkassen">
+          <option value="3.29">BARMER (3.29%)</option>
+          <option value="2.50">hkk (2.50%)</option>
+          <option value="2.19">HEK – Hanseatische Krankenkasse (2.19%)</option>
+          <option value="3.40">KKH Kaufmännische Krankenkasse (3.40%)</option>
+          <option value="2.69">Techniker Krankenkasse TK (2.69%)</option>
+          <option value="3.58">DAK-Gesundheit (3.58%)</option>
+          <option value="2.99">Handelskrankenkasse hkk (2.99%)</option>
+          <option value="3.49">IKK classic (3.49%)</option>
+          <option value="3.29">Knappschaft (3.29%)</option>
+        </optgroup>
+        <optgroup label="IKK">
+          <option value="3.49">IKK classic (3.49%)</option>
+          <option value="2.99">IKK gesund plus (2.99%)</option>
+          <option value="3.49">IKK Nord (3.49%)</option>
+          <option value="3.79">IKK Südwest (3.79%)</option>
+        </optgroup>
+        <optgroup label="BKK">
+          <option value="2.60">Audi BKK (2.60%)</option>
+          <option value="2.80">BKK PwC (2.80%)</option>
+          <option value="2.50">BKK Public (2.50%)</option>
+          <option value="2.48">BKK Faber-Castell &amp; Partner (2.48%)</option>
+          <option value="2.18">BKK firmus (2.18%) ← günstigste</option>
+          <option value="2.99">BKK Freudenberg (2.99%)</option>
+          <option value="3.20">BKK Miele (3.20%)</option>
+          <option value="2.80">BKK MTU (2.80%)</option>
+          <option value="3.79">BKK ProVita (3.79%)</option>
+          <option value="3.90">BKK melitta HMR (3.90%)</option>
+          <option value="3.69">BIG direkt gesund (3.69%)</option>
+          <option value="2.50">BKK Groz-Beckert (2.50%)</option>
+          <option value="2.99">BKK Linde (2.99%)</option>
+          <option value="2.80">BKK Pfaff (2.80%)</option>
+          <option value="3.80">BKK Diakonie (3.80%)</option>
+          <option value="3.40">BAHN-BKK (3.40%)</option>
+        </optgroup>
+        <optgroup label="Sonstige">
+          <option value="3.79">BERGISCHE Krankenkasse (3.79%)</option>
+          <option value="2.99">Mobil Krankenkasse (2.99%)</option>
+          <option value="3.10">Vivida BKK (3.10%)</option>
+          <option value="custom">Andere / manuell eingeben</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-group" id="zusatzGroup2">
+      <label>GKV Zusatzbeitrag (%)</label>
+      <div class="input-wrap">
+        <input type="number" id="zusatzbeitrag" value="2.9" min="0" max="5" step="0.01">
+        <span class="eur">%</span>
+      </div>
+      <div id="zusatzNote" style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">⌀ Durchschnitt 2026 · gesetzt vom GKV-Spitzenverband</div>
+    </div>
+    <div class="form-group hidden" id="pkvGroup">
+      <label>PKV monthly premium (EUR)</label>
+      <div class="input-wrap">
+        <input type="number" id="pkvPremium" value="0" min="0" step="1">
+        <span class="eur">EUR</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Pension Insurance (Rentenversicherung)</label>
+      <select id="rvType">
+        <option value="gkv" selected>Compulsorily insured</option>
+        <option value="exempt">Exempt by law (Befreiung)</option>
+        <option value="none">Not insured</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Unemployment Insurance (Arbeitslosenversicherung)</label>
+      <select id="avType">
+        <option value="gkv" selected>Compulsorily insured</option>
+        <option value="exempt">Exempt by law</option>
+        <option value="none">Not insured</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tax results (live, shown after KSK calc) -->
+  <div class="results" id="taxResults">
+    <div class="sep"></div>
+    <div class="breakdown-title">Tax Comparison</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.75rem;">Click a panel to select which assessment to use. The chosen ESt flows into the yearly summary.</div>
+    <div class="tax-comparison">
+      <div class="tax-panel" id="separatePanel" onclick="selectAssessment('separate')" style="cursor:pointer;">
+        <h4>Separate Assessment (getrennte Veranlagung)</h4>
+        <div class="note" style="font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem;">Einkommensteuer — each person receives the full Grundfreibetrag</div>
+        <div class="row"><span class="lbl">Your gross income</span><span class="val" id="txYourIncome">–</span></div>
+        <div class="row" id="txKFBSeparateRow" style="display:none;"><span class="lbl" style="color:var(--muted);font-size:0.8rem;">↳ Kinderfreibetrag (§32 Abs.6)</span><span class="val" id="txKFBSeparate" style="color:var(--muted);font-size:0.8rem;">–</span></div>
+        <div class="row" id="txYourZvERow" style="display:none;"><span class="lbl">Your zvE after KFB</span><span class="val" id="txYourZvE">–</span></div>
+        <div class="row" id="txSpouseRow"><span class="lbl">Spouse taxable income</span><span class="val" id="txSpouseIncome">–</span></div>
+        <div class="row"><span class="lbl">Your Einkommensteuer</span><span class="val" id="txYourTax">–</span></div>
+        <div class="row" id="txSpouseTaxRow"><span class="lbl">Spouse Einkommensteuer</span><span class="val" id="txSpouseTax">–</span></div>
+        <div class="row total"><span class="lbl">Total separate ESt</span><span class="val" id="txTotalSeparate">–</span></div>
+        <div class="row" style="margin-top:0.6rem;border-top:1px dashed var(--border);padding-top:0.5rem;"><span class="lbl" style="color:var(--muted);font-size:0.78rem;">Lohnsteuer proxy (Steuerklasse-based, advance payments)</span><span class="val" id="txLohnsteuer" style="color:var(--muted);font-size:0.78rem;">–</span></div>
+      </div>
+      <div class="tax-panel hidden" id="jointPanel" onclick="selectAssessment('joint')" style="cursor:pointer;">
+        <h4>Joint Splitting (Ehegattensplitting)</h4>
+        <div class="note" style="font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem;">Combined income halved, tariff applied, result doubled</div>
+        <div class="row"><span class="lbl">Combined income</span><span class="val" id="txJointIncome">–</span></div>
+        <div class="row" id="txKFBJointRow" style="display:none;"><span class="lbl" style="color:var(--muted);font-size:0.8rem;">↳ Kinderfreibetrag (§32 Abs.6)</span><span class="val" id="txKFBJoint" style="color:var(--muted);font-size:0.8rem;">–</span></div>
+        <div class="row" id="txJointZvERow" style="display:none;"><span class="lbl">Combined zvE after KFB</span><span class="val" id="txJointZvE">–</span></div>
+        <div class="row"><span class="lbl">Income per person (zvE ÷ 2)</span><span class="val" id="txJointHalf">–</span></div>
+        <div class="row total"><span class="lbl">Total joint ESt</span><span class="val" id="txTotalJoint">–</span></div>
+        <div class="row highlight"><span class="lbl">vs. separate assessment</span><span class="val" id="txSavings">–</span></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:0.75rem;"><span class="lbl">Solidaritätszuschlag</span><span class="val" id="txSoli">–</span></div>
+    <div class="row"><span class="lbl">Church tax (Kirchensteuer)</span><span class="val" id="txChurchLine">–</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     CARD 4 · BRUTTO → NETTO BREAKDOWN
+════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="card-title">04 · Brutto → Netto Breakdown <span class="badge">Social + Tax</span></div>
+
+  <!-- Netto results (shown after calc) -->
+  <div class="results" id="nettoResults">
+    <div class="sep"></div>
+
+    <!-- Summary period toggle -->
+    <div class="summary-toggle">
+      <label for="summaryPeriod">View as:</label>
+      <select id="summaryPeriod" onchange="renderSummary()">
+        <option value="monthly" selected>Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div id="summaryTable">
+        <div class="breakdown-title" id="summaryTitle">Monthly Summary</div>
+        <div class="row"><span class="lbl">Gross income</span><span class="val" id="ntGross">–</span></div>
+        <div class="row" style="padding-left:1rem;font-size:0.82rem;color:var(--muted);" id="ntQualifyingRow">
+          <span class="lbl">↳ Qualifying income <small>(§3 Nr. 26 activity)</small></span>
+          <span class="val" id="ntQualifying">–</span>
+        </div>
+        <div class="row" id="ntCommercialRow" style="display:none;padding-left:1rem;font-size:0.82rem;color:var(--muted);">
+          <span class="lbl">↳ Commercial income <small>(not §3 Nr. 26 exempt)</small></span>
+          <span class="val" id="ntCommercial">–</span>
+        </div>
+        <div class="row" style="border-left:3px solid var(--accent);padding-left:0.5rem;">
+          <span class="lbl">
+            Taxable freelance profit
+            <small style="color:var(--muted);font-size:0.72rem;" id="taxableProfitLabel">(gross − pauschale − expenses)</small>
+          </span>
+          <span class="val" id="ntTaxableProfit" style="color:var(--accent)">–</span>
+        </div>
+        <div class="row" style="border-left:3px solid var(--accent2);padding-left:0.5rem;" id="ntYourRawIncomeRow">
+          <span class="lbl">
+            Total income (Finanzamt basis)
+            <small style="color:var(--muted);font-size:0.72rem;">freelance profit + other income</small>
+          </span>
+          <span class="val" id="ntYourRawIncome" style="color:var(--accent2)">–</span>
+        </div>
+        <div class="row" id="ntKSKRow"><span class="lbl" id="ntKSKLabel">KSK contributions (total)</span><span class="val" id="ntKSKTotal">–</span></div>
+        <div class="row" id="ntRVRow" style="padding-left:1rem;font-size:0.82rem;"><span class="lbl">↳ Rentenversicherung (<span id="ntRVrate">–</span>)</span><span class="val" id="ntRV">–</span></div>
+        <div class="row" id="ntKVRow" style="padding-left:1rem;font-size:0.82rem;"><span class="lbl">↳ Krankenversicherung (<span id="ntKVrate">–</span>)</span><span class="val" id="ntKV">–</span></div>
+        <div class="row" id="ntPVRow" style="padding-left:1rem;font-size:0.82rem;"><span class="lbl">↳ Pflegeversicherung (<span id="ntPVrate">–</span>)</span><span class="val" id="ntPV">–</span></div>
+        <div class="row" id="ntAVRow" style="padding-left:1rem;font-size:0.82rem;"><span class="lbl">↳ Arbeitslosenversicherung (<span id="ntAVrate">–</span>)</span><span class="val" id="ntAV">–</span></div>
+        <div class="row deduct"><span class="lbl">Einkommensteuer <small style="color:var(--muted)" id="ntEStLabel">(annual assessment)</small></span><span class="val" id="ntESt">–</span></div>
+        <div class="row deduct"><span class="lbl">Solidaritätszuschlag</span><span class="val" id="ntSoli2">–</span></div>
+        <div class="row deduct"><span class="lbl">Church tax</span><span class="val" id="ntChurch">–</span></div>
+        <div class="sep"></div>
+        <div class="row total"><span class="lbl">Total deductions</span><span class="val" id="ntTotalDeduct">–</span></div>
+        <div class="row total"><span class="lbl">Effective rate</span><span class="val" id="ntEffRate">–</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;padding-left:1rem;">
+        <div class="breakdown-title" id="ntTakeHomeLabel">Monthly take-home</div>
+        <div class="netto-big" id="ntTakeHome">–</div>
+      </div>
+    </div>
+    <div class="note" id="ntBbgsNote" style="margin-top:0.5rem;display:none;"></div>
+
+    <!-- Headroom: how much more can be earned before KSK triggers -->
+    <div id="headroomBox" style="display:none;"></div>
+
+    <!-- Headroom: how much more before income tax is owed -->
+    <div id="taxHeadroomBox" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- CALCULATE BUTTON -->
+<button class="calc-btn" onclick="calculate()">▶ Calculate KSK Status &amp; Full Breakdown</button>
+
+<!-- ═══════════════════════════════════════════════════════
+     RESULTS · KSK STATUS
+════════════════════════════════════════════════════════ -->
+<div class="results" id="kskResults">
+  <div class="card">
+    <div class="card-title">KSK Eligibility Results · <span id="resultYear"></span></div>
+
+    <div class="status-box" id="statusBox">
+      <div class="status-label">Status</div>
+      <div class="status-headline" id="statusHeadline"></div>
+      <div class="status-desc" id="statusDesc"></div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-title">Calculation Breakdown</div>
+      <div class="row"><span class="lbl">Total gross income</span><span class="val" id="rGross">–</span></div>
+      <div class="row deduct"><span class="lbl">Übungsleiterpauschale (deducted)</span><span class="val" id="rPauschale">–</span></div>
+      <div class="row" id="rCommercialRow" style="display:none;border-left:3px solid var(--warn);padding-left:0.5rem;"><span class="lbl">Commercial income (not §3 Nr. 26 exempt)</span><span class="val" id="rCommercial">–</span></div>
+      <div class="row deduct"><span class="lbl">Business expenses</span><span class="val" id="rExpenses">–</span></div>
+      <div class="row total"><span class="lbl">Taxable profit</span><span class="val" id="rProfit">–</span></div>
+      <div class="row"><span class="lbl">Eligible months</span><span class="val" id="rMonths">–</span></div>
+      <div class="row"><span class="lbl">Pro-rated KSK limit (325 EUR × months)</span><span class="val" id="rLimit">–</span></div>
+      <div class="row"><span class="lbl">Avg monthly profit</span><span class="val" id="rAvgProfit">–</span></div>
+      <div class="tip-row row" onclick="toggleTip('tipBBGSrv')">
+        <span class="lbl"><span class="tip-icon">?</span> BBGS cap RV (<span id="rBBGSrvCap">–</span>/mo)</span>
+        <span class="val" id="rBBGSrv">–</span>
+      </div>
+      <div class="tip-panel" id="tipBBGSrv">
+        <strong>Beitragsbemessungsgrenze (BBGS) – Rentenversicherung</strong><br>
+        This is the annual earnings ceiling above which no additional pension (RV) contributions are calculated. If your monthly profit exceeds this cap, contributions are only charged on the capped amount — not your full profit. It is set by law each year and typically rises with average wages. The KSK applies it the same way as for employees.
+      </div>
+      <div class="tip-row row" onclick="toggleTip('tipBBGSkv')">
+        <span class="lbl"><span class="tip-icon">?</span> BBGS cap KV/PV (<span id="rBBGSkvCap">–</span>/mo)</span>
+        <span class="val" id="rBBGSkv">–</span>
+      </div>
+      <div class="tip-panel" id="tipBBGSkv">
+        <strong>Beitragsbemessungsgrenze – Kranken- &amp; Pflegeversicherung</strong><br>
+        A separate, lower ceiling applies to health (KV) and nursing care (PV) contributions. Income above this threshold is contribution-free for KV/PV purposes. In 2026 this cap is 5,812 EUR/month. High earners would otherwise be in private insurance (PKV); this cap ensures GKV contributions stay proportionate.
+      </div>
+      <div class="tip-row row" onclick="toggleTip('tipMinBeitrag')">
+        <span class="lbl"><span class="tip-icon">?</span> Mindestbeitrag floor</span>
+        <span class="val" id="rMinBeitrag">–</span>
+      </div>
+      <div class="tip-panel" id="tipMinBeitrag">
+        <span id="tipMinBeitragContent">Calculate first to see your personalised Mindestbeitrag breakdown.</span>
+      </div>
+    </div>
+
+    <div class="rec-box" id="recBox"></div>
+  </div>
+</div>
+
+<!-- FOOTER DISCLAIMER -->
+<footer>
+  <p>
+    <strong>⚠ DISCLAIMER:</strong> This is NOT an official government tool. All calculations are estimates for planning purposes only and may not reflect your individual tax situation, current KSK rules, or recent legislative changes. Income tax estimates use simplified bracket formulas and do not account for all deductions, allowances, or surcharges. KSK contribution rates and BBGS caps change annually. Always verify your obligations with <strong>Künstlersozialkasse.de</strong> and your <strong>Finanzamt</strong>. This tool does not constitute legal, tax, or financial advice.
+  </p>
+</footer>
+
+</div><!-- /container -->
+
+<script>
+// ──────────────────────────────────────────────────────────
+// DATA TABLES
+// ──────────────────────────────────────────────────────────
+const YEAR_DATA = {
+  2020: { pauschale:2400, rate:0.186,  grundfrei:9408,  bbgsRV:6900, bbgsKV:4687, kvRate:0.0795, pvBase:0.01525, rvRate:0.093 },
+  2021: { pauschale:3000, rate:0.188,  grundfrei:9744,  bbgsRV:7100, bbgsKV:4837, kvRate:0.0800, pvBase:0.01525, rvRate:0.093 },
+  2022: { pauschale:3000, rate:0.190,  grundfrei:10347, bbgsRV:7050, bbgsKV:4837, kvRate:0.0800, pvBase:0.01525, rvRate:0.093 },
+  2023: { pauschale:3000, rate:0.198,  grundfrei:10908, bbgsRV:7300, bbgsKV:4987, kvRate:0.0800, pvBase:0.01700, rvRate:0.093 },
+  2024: { pauschale:3000, rate:0.198,  grundfrei:11784, bbgsRV:7550, bbgsKV:5175, kvRate:0.0825, pvBase:0.01700, rvRate:0.093 },
+  2025: { pauschale:3000, rate:0.199,  grundfrei:12096, bbgsRV:8050, bbgsKV:5512, kvRate:0.0825, pvBase:0.01700, rvRate:0.093 },
+  2026: { pauschale:3300, rate:0.1985, grundfrei:12348, bbgsRV:8450, bbgsKV:5812, kvRate:0.0825, pvBase:0.01440, rvRate:0.093 },
+};
+
+const MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function yd(year) { return YEAR_DATA[year] || YEAR_DATA[2026]; }
+function eur(n) { return n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR'; }
+function pct(n) { return (n*100).toFixed(2) + '%'; }
+
+// ──────────────────────────────────────────────────────────
+// CHURCH TAX RATES BY STATE
+// ──────────────────────────────────────────────────────────
+const CHURCH_TAX_RATES = {
+  BW: 0.08, BY: 0.08,  // 8%
+  BE: 0.09, BB: 0.09, HB: 0.09, HH: 0.09, HE: 0.09,
+  MV: 0.09, NI: 0.09, NW: 0.09, RP: 0.09, SL: 0.09,
+  SN: 0.09, ST: 0.09, SH: 0.09, TH: 0.09
+};
+
+// Sachsen has a lower PV employer share — employee pays more; handled in pvRate calc
+const SACHSEN_PV_EXTRA = 0.005; // extra 0.5% employee share in Sachsen
+
+// ──────────────────────────────────────────────────────────
+// AV (unemployment insurance) rate 2020-2026
+// ──────────────────────────────────────────────────────────
+const AV_RATES = {
+  2020:0.012, 2021:0.012, 2022:0.012, 2023:0.013,
+  2024:0.013, 2025:0.013, 2026:0.013
+};
+
+// Kinderfreibetrag (§32 Abs.6 EStG) — per-parent deduction per child
+// = Freibetrag für das sächliche Existenzminimum + BEA-Freibetrag
+// Only beneficial when ESt saving > Kindergeld received; Finanzamt applies
+// the more favourable option automatically (Günstigerprüfung).
+// For joint filing (Ehegattensplitting) the full joint deduction is applied
+// to the combined income before halving.
+const KINDERFREIBETRAG = {
+  //       per_parent  joint (2×)
+  2020: [3906, 7812],
+  2021: [4194, 8388],
+  2022: [4274, 8548],
+  2023: [4476, 8952],
+  2024: [4656, 9312],
+  2025: [4800, 9600],
+  2026: [4770, 9540],
+};
+
+// ──────────────────────────────────────────────────────────
+// EINKOMMENSTEUER – Annual assessment (Steuererklärung)
+// Always applies full Grundfreibetrag regardless of Steuerklasse.
+// This is what actually determines the annual tax bill for a
+// self-employed artist filing a Steuererklärung.
+// Steuerklasse has NO effect on ESt — it only governs employer
+// Lohnsteuer withholding, which doesn't apply to Selbstständige.
+// ──────────────────────────────────────────────────────────
+function calcESt(year, taxableIncome) {
+  // §32a EStG — official German income tax formula.
+  // Zone breakpoints (17,005 / 66,760 / 277,825) are fixed by law.
+  // Zone constants are derived from the year's Grundfreibetrag for continuity at boundaries.
+  if (taxableIncome <= 0) return 0;
+  const g = yd(year).grundfrei;
+  if (taxableIncome <= g) return 0;
+  const x = taxableIncome;
+  // Derive zone constants from Grundfreibetrag (ensures continuity at every boundary)
+  const yB = (17005 - g) / 10000;
+  const c1 = (979.18 * yB + 1400) * yB;                          // zone2 constant
+  const zB = (66760 - 17005) / 10000;
+  const c3 = 0.42 * 66760 - ((228.74 * zB + 2397) * zB + c1);   // zone3 constant
+  const c4 = 0.45 * 277825 - (0.42 * 277825 - c3);              // zone4 constant
+  if (x <= 17005) {
+    const y = (x - g) / 10000;
+    return Math.max(0, (979.18 * y + 1400) * y);
+  }
+  if (x <= 66760) {
+    const z = (x - 17005) / 10000;
+    return Math.max(0, (228.74 * z + 2397) * z + c1);
+  }
+  if (x <= 277825) return Math.max(0, 0.42 * x - c3);
+  return Math.max(0, 0.45 * x - c4);
+}
+
+// Ehegattensplitting: combine incomes, halve, apply tariff, double result
+function calcEStSplitting(year, incomeA, incomeB) {
+  const combined = incomeA + incomeB;
+  const half = combined / 2;
+  return 2 * calcESt(year, half);
+}
+
+// ──────────────────────────────────────────────────────────
+// LOHNSTEUER – Employer withholding estimate (Steuerklasse-based)
+// Only relevant for employed income. For a Selbstständiger this
+// represents the Einkommensteuer-Vorauszahlung proxy — what
+// the Finanzamt might ask for as quarterly advance payments.
+// Steuerklasse V/VI carry no Grundfreibetrag by design.
+// ──────────────────────────────────────────────────────────
+const ENTLASTUNGSBETRAG = { 2020:1908, 2021:4008, 2022:4008, 2023:4260, 2024:4260, 2025:4260, 2026:4260 };
+
+function calcLohnsteuer(year, income, taxClass) {
+  const g = yd(year).grundfrei;
+  let zvE;
+  switch (taxClass) {
+    case 1: zvE = Math.max(0, income - g); break;
+    case 2: zvE = Math.max(0, income - g - (ENTLASTUNGSBETRAG[year] || 4260)); break;
+    case 3: zvE = Math.max(0, income - 2 * g); break;  // double Grundfreibetrag
+    case 4: zvE = Math.max(0, income - g); break;
+    case 5: zvE = income; break;  // no Grundfreibetrag — that's assigned to Kl. III spouse
+    case 6: zvE = income; break;  // no Grundfreibetrag
+    default: zvE = Math.max(0, income - g);
+  }
+  // For class III, apply splitting tariff proxy (double half)
+  if (taxClass === 3) return Math.max(0, 2 * calcEStRaw(year, zvE / 2));
+  return Math.max(0, calcEStRaw(year, zvE));
+}
+
+function calcEStRaw(year, zvE) {
+  // Core tariff on already-adjusted zvE (Grundfreibetrag already removed).
+  // Equivalent to calcESt with g=0, so zone boundaries shift to 17005 and 66760.
+  // Constants derived for continuity (same math as calcESt but with g=0).
+  if (zvE <= 0) return 0;
+  const g = yd(year).grundfrei;
+  const yB = (17005 - g) / 10000;
+  const c1 = (979.18 * yB + 1400) * yB;
+  const zB = (66760 - 17005) / 10000;
+  const c3 = 0.42 * 66760 - ((228.74 * zB + 2397) * zB + c1);
+  const c4 = 0.45 * 277825 - (0.42 * 277825 - c3);
+  // zvE has grundfrei removed, so effective x = zvE + g for zone check
+  const x = zvE + g;
+  if (x <= 17005) {
+    const y = zvE / 10000;
+    return (979.18 * y + 1400) * y;
+  }
+  if (x <= 66760) {
+    const z = (x - 17005) / 10000;
+    return (228.74 * z + 2397) * z + c1;
+  }
+  if (x <= 277825) return Math.max(0, 0.42 * x - c3);
+  return Math.max(0, 0.45 * x - c4);
+}
+
+// ──────────────────────────────────────────────────────────
+// SOLIDARITÄTSZUSCHLAG (2021+ relief thresholds)
+// ──────────────────────────────────────────────────────────
+// Soli Freigrenze (single) per year — §3 Abs.3 SolZG as amended
+// Joint filing (Zusammenveranlagung) doubles the threshold
+const SOLI_FREIGRENZE = {
+  2020:   972,   // pre-reform: old threshold
+  2021: 16956,   // Jahressteuergesetz 2020 — massive relief for low/mid earners
+  2022: 16956,
+  2023: 17543,   // Inflationsausgleichsgesetz
+  2024: 18130,
+  2025: 18971,   // Steuerfortentwicklungsgesetz
+  2026: 20350,
+};
+
+function calcSoliSimple(tax, joint = false, year = 2026) {
+  if (tax <= 0) return 0;
+  const fSingle = SOLI_FREIGRENZE[year] ?? 20350;
+  const freigrenze = joint ? fSingle * 2 : fSingle;
+  if (tax <= freigrenze) return 0;
+  // Milderungszone (glide): 20% × (ESt − Freigrenze), capped at full 5.5%
+  const full  = tax * 0.055;
+  const glide = 0.20 * (tax - freigrenze);
+  return Math.min(full, glide);
+}
+
+function getGrundfreibetrag(year, married) {
+  return married ? 2 * yd(year).grundfrei : yd(year).grundfrei;
+}
+
+// ──────────────────────────────────────────────────────────
+// UI STATE
+// ──────────────────────────────────────────────────────────
+let marital = 'single';
+
+function setMarital(val) {
+  marital = val;
+  document.getElementById('btnSingle').classList.toggle('active', val === 'single');
+  document.getElementById('btnMarried').classList.toggle('active', val === 'married');
+  document.getElementById('spouseFields').classList.toggle('hidden', val !== 'married');
+  if (val === 'married') {
+    document.getElementById('taxClass').value = '3';
+  } else {
+    document.getElementById('taxClass').value = '1';
+  }
+}
+
+
+function fillAllMonths() {
+  const amount = parseFloat(document.getElementById('fillAllAmount').value) || 0;
+  document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])').forEach(input => {
+    input.value = amount.toFixed(2);
+  });
+}
+
+function clearAllMonths() {
+  document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])').forEach(input => {
+    input.value = '0';
+  });
+  document.getElementById('fillAllAmount').value = '';
+}
+
+
+function onKasseChange() {
+  const sel = document.getElementById('kasseSelect');
+  const val = sel.value;
+  const input = document.getElementById('zusatzbeitrag');
+  const note  = document.getElementById('zusatzNote');
+  if (val === 'avg') {
+    input.value = '2.90';
+    note.textContent = '⌀ Durchschnitt 2026 · gesetzt vom GKV-Spitzenverband';
+    input.readOnly = true;
+    input.style.opacity = '0.6';
+  } else if (val === 'custom') {
+    input.readOnly = false;
+    input.style.opacity = '1';
+    note.textContent = 'Bitte Zusatzbeitrag deiner Kasse manuell eingeben.';
+    input.focus();
+  } else {
+    input.value = parseFloat(val).toFixed(2);
+    const name = sel.options[sel.selectedIndex].text.replace(/\s*\(.*/, '');
+    note.textContent = `Zusatzbeitrag 2026: ${val}% (${name})`;
+    input.readOnly = true;
+    input.style.opacity = '0.6';
+  }
+}
+
+function onHealthInsChange() {
+  const v = document.getElementById('healthInsType').value;
+  const isPKV = v === 'pkv';
+  document.getElementById('zusatzGroup').classList.toggle('hidden', isPKV);
+  document.getElementById('zusatzGroup2').classList.toggle('hidden', isPKV);
+  document.getElementById('pkvGroup').classList.toggle('hidden', !isPKV);
+}
+
+function buildMonthGrid() {
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+  MONTHS.forEach((name, i) => {
+    const div = document.createElement('div');
+    div.className = 'month-cell';
+    div.dataset.mi = i + 1;
+    div.innerHTML = `<label>${MONTHS_SHORT[i]}</label>
+      <div class="input-wrap">
+        <input type="number" data-month="${i+1}" value="0" min="0" step="0.01">
+        <span class="eur">EUR</span>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function applyStartMonth() {
+  const startMonth = parseInt(document.getElementById('startMonth').value);
+  const year = parseInt(document.getElementById('year').value);
+  const now = new Date();
+  const cy = now.getFullYear();
+  const cm = now.getMonth() + 1;
+
+  document.querySelectorAll('.month-cell').forEach(div => {
+    const m = parseInt(div.dataset.mi);
+    const input = div.querySelector('input');
+    if (m < startMonth) {
+      input.value = '0';
+      input.disabled = true;
+      div.classList.add('disabled');
+      div.classList.remove('future');
+    } else if (year === cy && m > cm) {
+      input.disabled = false;
+      div.classList.add('future');
+      div.classList.remove('disabled');
+    } else {
+      input.disabled = false;
+      div.classList.remove('future', 'disabled');
+    }
+  });
+
+  // Auto-grey out start month options for past months if current year
+  const sel = document.getElementById('startMonth');
+  Array.from(sel.options).forEach(opt => {
+    const v = parseInt(opt.value);
+    if (year === cy && v > cm) {
+      opt.style.color = 'var(--warn)';
+    } else {
+      opt.style.color = '';
+    }
+  });
+}
+
+function updateYearFigures() {
+  // Year bar removed; nothing to update here
+}
+
+
+function updatePauschaleNote() {
+  const year = parseInt(document.getElementById('year').value);
+  const d = yd(year);
+  document.getElementById('pauschaleNote').textContent = d.pauschale.toLocaleString('de-DE');
+}
+
+function updatePauschaleEligibility() {
+  const activity = document.getElementById('pauschaleActivity').value;
+  const hours    = document.getElementById('weeklyHours').value;
+  const resultEl = document.getElementById('pauschaleResult');
+  const hiddenEl = document.getElementById('pauschaleEligible');
+  const year     = parseInt(document.getElementById('year').value);
+  const pauschale = yd(year).pauschale.toLocaleString('de-DE');
+
+  const qualifyingActivity = activity === 'qualified' || activity === 'mixed';
+  const qualifyingHours    = hours === 'under14';
+  const eligible           = qualifyingActivity && qualifyingHours;
+
+  // Update the hidden input that the rest of the calculator reads
+  hiddenEl.value = eligible ? 'yes' : 'no';
+
+  // Dim expenses group only when fully ineligible
+  document.getElementById('expensesGroup').classList.toggle('input-dimmed', !eligible);
+
+  // Show contextual guidance in the result strip
+  // Show/hide the commercial income split field; reset value when not Mixed
+  const isMixed = activity === 'mixed' && qualifyingHours;
+  document.getElementById('mixedSplitGroup').classList.toggle('hidden', !isMixed);
+  if (!isMixed) {
+    // Reset so a stale value never silently affects the calculation
+    document.getElementById('commercialIncome').value = '0';
+  }
+  if (isMixed) {
+    const commercialVal = parseFloat(document.getElementById('commercialIncome').value) || 0;
+    const noteEl = document.getElementById('mixedSplitNote');
+    noteEl.innerHTML = commercialVal > 0
+      ? `Commercial share: <strong>${commercialVal.toLocaleString('de-DE', {minimumFractionDigits:2})} EUR</strong> — taxed in full, no Pauschale offset. Qualifying portion receives the §3 Nr. 26 deduction (up to ${pauschale} EUR).`
+      : `Enter the EUR amount of your gross income (from the monthly grid) that comes from commercial clients. Leave 0 if uncertain — you can adjust later.`;
+  }
+
+  // Show contextual guidance in the result strip
+  if (activity === 'commercial') {
+    resultEl.style.cssText = 'border-left:3px solid var(--error);padding-left:0.75rem;color:var(--muted)';
+    resultEl.innerHTML = `<strong style="color:var(--error)">§3 Nr. 26 does not apply.</strong> Commercial freelance income (invoiced to private clients or for-profit companies) is fully taxable. The Pauschale requires a non-profit, church, municipality, or public-law body as the client.`;
+  } else if (!qualifyingHours) {
+    resultEl.style.cssText = 'border-left:3px solid var(--warn);padding-left:0.75rem;color:var(--muted)';
+    resultEl.innerHTML = `<strong style="color:var(--warn)">Time criterion not met.</strong> §3 Nr. 26 requires the activity to be <em>nebenberuflich</em> — no more than 14 hrs/week averaged over the year (⅓ of a comparable full-time role). If you exceed this, the exemption does not apply regardless of client type or your other employment status.`;
+  } else if (activity === 'mixed') {
+    resultEl.style.cssText = 'border-left:3px solid var(--warn);padding-left:0.75rem;color:var(--muted)';
+    resultEl.innerHTML = `<strong style="color:var(--warn)">Partial eligibility.</strong> Enter the commercial portion of your income in the field below. The calculator will apply the §3 Nr. 26 Pauschale only against the qualifying share and treat the commercial share as fully taxable income. Your "other income" field in Card 3 is for income from <em>entirely separate</em> activities (salary, rental, etc.) — not this commercial split.`;
+  } else {
+    resultEl.style.cssText = 'border-left:3px solid var(--success);padding-left:0.75rem;color:var(--muted)';
+    resultEl.innerHTML = `<strong style="color:var(--success)">§3 Nr. 26 applies.</strong> Up to <strong>${pauschale} EUR/yr</strong> of your income is tax-free — claimed in your <em>Steuererklärung</em>. This is compatible with invoicing normally. No separate employer or employment contract is required. Note: you do <em>not</em> need another job to qualify; the sole criterion is the 14 hrs/week time limit.`;
+  }
+
+  updatePauschaleNote();
+}
+
+// ──────────────────────────────────────────────────────────
+// TOOLTIP TOGGLE
+// ──────────────────────────────────────────────────────────
+function toggleTip(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// ──────────────────────────────────────────────────────────
+// SUMMARY RENDER (monthly / yearly switch)
+// ──────────────────────────────────────────────────────────
+let _cs = null; // cached calc state
+let _chosenAssessment = 'separate'; // 'separate' or 'joint'
+
+function selectAssessment(type) {
+  _chosenAssessment = type;
+  const sepPanel = document.getElementById('separatePanel');
+  const jntPanel = document.getElementById('jointPanel');
+  if (sepPanel) {
+    sepPanel.style.outline = type === 'separate' ? '2px solid var(--accent)' : 'none';
+    sepPanel.style.boxShadow = type === 'separate' ? '0 0 0 2px var(--accent)' : 'none';
+  }
+  if (jntPanel) {
+    jntPanel.style.outline = type === 'joint' ? '2px solid var(--accent)' : 'none';
+    jntPanel.style.boxShadow = type === 'joint' ? '0 0 0 2px var(--accent)' : 'none';
+  }
+  if (_cs) renderSummary();
+}
+
+function renderSummary() {
+  if (!_cs) return;
+  const period = document.getElementById('summaryPeriod').value;
+  const m = period === 'monthly';
+  const div = m ? _cs.eligibleMonths : 1;
+  const divLabel = m ? `÷${_cs.eligibleMonths}` : '';
+
+  document.getElementById('summaryTitle').textContent = m
+    ? `Monthly Summary (÷${_cs.eligibleMonths} eligible months)`
+    : 'Yearly Summary';
+  document.getElementById('ntTakeHomeLabel').textContent = m ? 'Monthly take-home' : 'Yearly take-home';
+
+  const f = v => eur(v / div);
+
+  document.getElementById('ntGross').textContent = f(_cs.totalIncome);
+  document.getElementById('ntQualifyingRow').style.display = _cs.commercialIncome > 0 ? 'flex' : 'none';
+  document.getElementById('ntQualifying').textContent = f(_cs.totalGross);
+  if (document.getElementById('ntCommercialRow').style.display !== 'none') {
+    document.getElementById('ntCommercial').textContent = f(_cs.commercialIncome);
+  }
+  document.getElementById('ntTaxableProfit').textContent = f(_cs.taxableProfit);
+  if (document.getElementById('ntYourRawIncomeRow').style.display !== 'none') {
+    document.getElementById('ntYourRawIncome').textContent = f(_cs.yourRawIncome || _cs.taxableProfit);
+  }
+
+  // Recompute chosenESt live from current _chosenAssessment
+  const chosenEStNow  = _chosenAssessment === 'joint' ? _cs.jointESt  : _cs.separateTotalESt;
+  const chosenSoliNow = _chosenAssessment === 'joint' ? calcSoliSimple(_cs.jointESt, true, _cs.year) : _cs.yourSoli;
+  const churchNow     = chosenEStNow * _cs.churchRate;
+  const totalDeductNow = (_cs.kskRequired ? _cs.yearlyKSK : 0) + chosenEStNow + chosenSoliNow + churchNow;
+  const netYearlyNow  = _cs.totalIncome - totalDeductNow;
+  const effRateNow    = _cs.totalIncome > 0 ? totalDeductNow / _cs.totalIncome : 0;
+
+  const estLabel = _chosenAssessment === 'joint' ? 'Ehegattensplitting (joint)' : 'getrennte Veranlagung (separate)';
+  document.getElementById('ntEStLabel').textContent = estLabel;
+  document.getElementById('ntESt').textContent = chosenEStNow > 0 ? ('- ' + f(chosenEStNow)) : '0 EUR (below Grundfreibetrag)';
+  document.getElementById('ntSoli2').textContent = chosenSoliNow > 0 ? ('- ' + f(chosenSoliNow)) : '0 EUR';
+  document.getElementById('ntChurch').textContent = _cs.churchRate > 0 ? ('- ' + f(churchNow)) : '0 EUR (none)';
+  document.getElementById('ntTotalDeduct').textContent = f(totalDeductNow);
+  document.getElementById('ntEffRate').textContent = pct(effRateNow);
+  document.getElementById('ntTakeHome').textContent = eur(Math.max(0, m ? netYearlyNow / div : netYearlyNow));
+
+  if (_cs.kskRequired) {
+    document.getElementById('ntKSKTotal').textContent = '- ' + f(_cs.yearlyKSK);
+    document.getElementById('ntRV').textContent = '- ' + f(_cs.yearlyRV);
+    document.getElementById('ntKV').textContent = '- ' + f(_cs.yearlyKV);
+    document.getElementById('ntPV').textContent = '- ' + f(_cs.yearlyPV);
+    document.getElementById('ntAV').textContent = '- ' + f(_cs.yearlyAV || 0);
+  }
+  renderTaxHeadroom();
+}
+
+function renderTaxHeadroom() {
+  if (!_cs) return;
+  const taxHeadroomBox = document.getElementById('taxHeadroomBox');
+  if (!taxHeadroomBox) return;
+
+  const { year, d, yourRawIncome, spouseIncome, yourESt, jointESt,
+          kfbPerParent, kfbJoint, kfbData, jointIncome, eligibleMonths } = _cs;
+
+  const isJoint = _chosenAssessment === 'joint';
+
+  const taxFreeCeiling = isJoint
+    ? 2 * d.grundfrei + kfbJoint
+    : d.grundfrei + kfbPerParent;
+
+  const relevantIncome = isJoint ? jointIncome : yourRawIncome;
+  const relevantESt    = isJoint ? jointESt    : yourESt;
+  const taxHeadroom    = Math.max(0, taxFreeCeiling - relevantIncome);
+  const monthlyTaxHeadroom = taxHeadroom / eligibleMonths;
+
+  const soliFreigrenze = (SOLI_FREIGRENZE[year] ?? 20350) * (isJoint ? 2 : 1);
+  const soliHeadroom   = Math.max(0, soliFreigrenze - relevantESt);
+
+  function grossForEStTarget(targetESt) {
+    let lo = 0, hi = 2000000;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      let est;
+      if (isJoint) {
+        est = 2 * calcESt(year, Math.max(0, mid - kfbJoint) / 2);
+      } else {
+        est = calcESt(year, Math.max(0, mid - kfbPerParent));
+      }
+      est < targetESt ? lo = mid : hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  const ceilingLabel = isJoint
+    ? `2 × Grundfreibetrag ${eur(d.grundfrei)}${kfbJoint > 0 ? ` + Kinderfreibetrag ${eur(kfbJoint)}` : ''} (joint household)`
+    : `Grundfreibetrag ${eur(d.grundfrei)}${kfbPerParent > 0 ? ` + Kinderfreibetrag ${eur(kfbPerParent)}` : ''}`;
+  const incomeLabel = isJoint
+    ? `combined household income (${eur(yourRawIncome)} + ${eur(spouseIncome)})`
+    : 'your taxable income';
+
+  if (relevantESt === 0 && taxHeadroom > 0) {
+    const pct = Math.round((relevantIncome / taxFreeCeiling) * 100);
+    const statusColor = pct >= 85 ? 'var(--warn)' : 'var(--success)';
+    taxHeadroomBox.className     = pct >= 85 ? 'headroom-box warn' : 'headroom-box';
+    taxHeadroomBox.style.display = 'block';
+    taxHeadroomBox.innerHTML = `
+      <div class="headroom-amount" style="color:${statusColor}">${eur(monthlyTaxHeadroom)}/mo</div>
+      <div class="headroom-desc">
+        <strong>Additional monthly income before Einkommensteuer is owed</strong><br>
+        Your ${incomeLabel} (${eur(relevantIncome)}) is below the tax-free ceiling of
+        <strong>${eur(taxFreeCeiling)}</strong> (${ceilingLabel}).
+        You can earn <strong>${eur(taxHeadroom)} more this year</strong>
+        (~${eur(monthlyTaxHeadroom)}/mo over ${eligibleMonths} months) before any income tax is owed.
+        ${pct >= 85 ? `<br><span style="color:var(--warn)">⚠ You are at ${pct}% of your tax-free ceiling.</span>` : ''}
+      </div>`;
+
+  } else if (relevantESt > 0) {
+    const grossToSoli  = soliHeadroom > 0 ? grossForEStTarget(soliFreigrenze) : null;
+    const soliGrossGap = grossToSoli != null ? Math.max(0, grossToSoli - relevantIncome) : 0;
+    const monthlyToSoli = soliGrossGap > 0 ? soliGrossGap / eligibleMonths : 0;
+
+    let soliLine = '';
+    if (soliHeadroom > 0 && soliGrossGap > 0) {
+      soliLine = `<br>Solidaritätszuschlag begins when ${isJoint ? 'joint' : 'your'} ESt reaches
+        <strong>${eur(soliFreigrenze)}</strong> — you are
+        <strong>${eur(soliGrossGap)}</strong> in ${isJoint ? 'combined household' : 'gross'} income away
+        (~${eur(monthlyToSoli)}/mo), currently paying no Soli.`;
+    } else if (soliHeadroom <= 0) {
+      soliLine = `<br>Solidaritätszuschlag is already due on ${isJoint ? 'joint' : 'your'} ESt of
+        <strong>${eur(relevantESt)}</strong> (threshold: ${eur(soliFreigrenze)}).`;
+    }
+
+    taxHeadroomBox.className     = 'headroom-box warn';
+    taxHeadroomBox.style.display = 'block';
+    taxHeadroomBox.innerHTML = `
+      <div class="headroom-amount" style="color:var(--error)">- ${eur(relevantESt / eligibleMonths)}/mo</div>
+      <div class="headroom-desc">
+        <strong>Einkommensteuer is due</strong><br>
+        Your ${incomeLabel} (${eur(relevantIncome)}) exceeds the tax-free ceiling of
+        <strong>${eur(taxFreeCeiling)}</strong> (${ceilingLabel})
+        by <strong>${eur(relevantIncome - taxFreeCeiling)}</strong>.
+        Estimated Einkommensteuer: <strong>${eur(relevantESt)}/year</strong>
+        (~${eur(relevantESt / eligibleMonths)}/mo).${soliLine}
+      </div>`;
+
+  } else {
+    taxHeadroomBox.style.display = 'none';
+  }
+}
+
+
+function calculate() {
+  const year = parseInt(document.getElementById('year').value);
+  const startMonth = parseInt(document.getElementById('startMonth').value);
+  const pauschaleEligible = document.getElementById('pauschaleEligible').value === 'yes';
+  const businessExpenses = parseFloat(document.getElementById('businessExpenses').value) || 0;
+  const otherIncome = parseFloat(document.getElementById('otherIncome').value) || 0;
+  // Commercial income split (only relevant when Mixed activity type is selected)
+  const activity = document.getElementById('pauschaleActivity').value;
+  const commercialIncome = (activity === 'mixed' && pauschaleEligible)
+    ? (parseFloat(document.getElementById('commercialIncome').value) || 0)
+    : 0;
+  const spouseIncome = (marital === 'married') ? (parseFloat(document.getElementById('spouseIncome').value) || 0) : 0;
+
+  // New fields
+  const taxClass = parseInt(document.getElementById('taxClass').value);
+  const age = parseInt(document.getElementById('age').value) || 30;
+  const bundesland = document.getElementById('bundesland').value;
+  const churchMember = document.getElementById('churchMember').value === 'yes';
+  const childrenVal = parseFloat(document.getElementById('children').value) || 0;
+  const children = Math.floor(childrenVal); // integer for PV calc
+  const healthInsType = document.getElementById('healthInsType').value;
+  const zusatz = healthInsType !== 'pkv' ? (parseFloat(document.getElementById('zusatzbeitrag').value) || 2.9) / 100 : 0;
+  const pkvPremiumMonthly = healthInsType === 'pkv' ? (parseFloat(document.getElementById('pkvPremium').value) || 0) : 0;
+  const rvType = document.getElementById('rvType').value;
+  const avType = document.getElementById('avType').value;
+
+  const d = yd(year);
+
+  // ── Gather monthly incomes ──
+  let totalGross = 0;
+  const now = new Date();
+  const cy = now.getFullYear();
+  const cm = now.getMonth() + 1;
+
+  document.querySelectorAll('.month-cell input').forEach(input => {
+    const m = parseInt(input.dataset.month);
+    if (m < startMonth) return;
+    totalGross += parseFloat(input.value) || 0;
+  });
+
+  const eligibleMonths = 13 - startMonth;
+  // The monthly income grid contains qualifying income only.
+  // Commercial income (entered separately for Mixed activity) is additional income
+  // NOT in the grid — added directly to taxable base with no Pauschale offset.
+  //
+  // §3 Nr. 26 Satz 2 EStG: expenses connected to the §3 Nr. 26 activity are only
+  // deductible insofar as they EXCEED the Pauschale. The Pauschale already covers
+  // expenses up to €3,300 — deducting those again would be a double benefit.
+  // Only the surplus above the Pauschale reduces taxable profit further.
+  //
+  //   pauschaleDeduct   = min(Pauschale, totalGross)
+  //   effectiveExpenses = pauschaleEligible ? max(0, expenses − pauschaleDeduct) : expenses
+  //   taxableProfit     = (totalGross − pauschaleDeduct) + commercialIncome − effectiveExpenses
+  //
+  // Examples (Pauschale = 3,300):
+  //   Expenses €500:  max(0, 500−3300) = 0    → fully absorbed, no extra deduction
+  //   Expenses €4,000: max(0, 4000−3300) = 700 → only €700 deducted beyond Pauschale
+  //   No Pauschale:   full expenses deducted as normal
+  const qualifyingGross   = totalGross;
+  const pauschaleDeduct   = pauschaleEligible ? Math.min(d.pauschale, qualifyingGross) : 0;
+  const effectiveExpenses = pauschaleEligible
+    ? Math.max(0, businessExpenses - pauschaleDeduct)
+    : businessExpenses;
+  const taxableProfit     = Math.max(0, qualifyingGross - pauschaleDeduct + commercialIncome - effectiveExpenses);
+  const proRatedLimit = 325 * eligibleMonths;
+  const avgMonthlyProfit = eligibleMonths > 0 ? taxableProfit / eligibleMonths : 0;
+
+  // ── BBGS caps ──
+  const bbgsCappedRV = Math.min(avgMonthlyProfit, d.bbgsRV);
+  const bbgsCappedKV = Math.min(avgMonthlyProfit, d.bbgsKV);
+
+  // ── PV surcharge: depends on children count and age ──
+  // No-child surcharge applies to adults >23 with 0 children
+  // Sachsen: employee pays extra 0.5%
+  const isSachsen = bundesland === 'SN';
+  let pvSurcharge = 0;
+  if (children === 0 && age > 23) pvSurcharge = year >= 2026 ? 0.006 : 0.0035;
+  // Per-child reduction from 2nd child: -0.25% each, max -1.0% (from 2024 reform)
+  const childReduction = children >= 2 ? Math.min((children - 1) * 0.0025, 0.01) : 0;
+  let pvRate = d.pvBase + pvSurcharge - childReduction;
+  if (isSachsen) pvRate += SACHSEN_PV_EXTRA;
+  pvRate = Math.max(0, pvRate);
+
+  // ── KSK contributions (artist pays employee-equivalent share) ──
+  let monthlyRV = rvType !== 'none' ? bbgsCappedRV * d.rvRate : 0;
+  let monthlyKV = 0;
+  if (healthInsType !== 'pkv') {
+    // GKV: artist pays half KV rate (KSK covers other half like employer)
+    monthlyKV = bbgsCappedKV * (d.kvRate + zusatz / 2);
+  } else {
+    // PKV: artist pays own premium (no KSK subsidy for PKV portion)
+    monthlyKV = pkvPremiumMonthly;
+  }
+  let monthlyPV = bbgsCappedKV * pvRate;
+  let monthlyAV = avType !== 'none' ? bbgsCappedRV * (AV_RATES[year] || 0.013) : 0;
+
+  const rawMonthlyKSK = monthlyRV + monthlyKV + monthlyPV + monthlyAV;
+
+  // ── Mindestbeitrag: KSK minimum contribution floor
+  //
+  // KSK-pflichtversicherte Künstler use a separate floor calculation tied to
+  // the 3,900 EUR/yr Mindesteinnahmen. The KV component uses the full GKV
+  // rate on the income base (not the halved share used for normal contributions),
+  // making the floor significantly higher than a naive halved-rate calculation.
+  //
+  // Authoritative 2026 figures (avg. Zusatzbeitrag 2.9%):
+  //   RV:  €30.23/mo  (same for all)
+  //   KV + Zusatzbeitrag: €57.68/mo  (same for all)
+  //   PV:  €11.86/mo with child  |  €15.82/mo childless (>23)
+  //   ─────────────────────────────────────────────────
+  //   Total: €99.77/mo (with child)  |  €103.73/mo (childless)
+  //
+  // For years other than 2026 we scale by the ratio of (rvRate + kvRate + pvRate)
+  // relative to 2026, as an approximation.
+  //
+  // The Zusatzbeitrag component in the floor uses the avg national Zusatzbeitrag
+  // for that year, NOT the user's individual setting (per KSK practice).
+  const AVG_ZUSATZ_BY_YEAR = {
+    2020:0.011, 2021:0.013, 2022:0.013, 2023:0.016,
+    2024:0.017, 2025:0.026, 2026:0.029
+  };
+  const avgZusatz = AVG_ZUSATZ_BY_YEAR[year] || 0.029;
+
+  let minBeitrag, tipRV, tipKV, tipPV, tipAV;
+  if (year === 2026) {
+    const minRV_exact = 30.23;
+    const kvBase57_68 = 57.68;
+    const kvZusatzAdj = 325 * (zusatz - avgZusatz) / 2;
+    const minKV_exact = healthInsType === 'pkv' ? pkvPremiumMonthly : (kvBase57_68 + kvZusatzAdj);
+    const minPV_exact = (children > 0) ? 11.86 : 15.82;
+    const minAV_exact = avType !== 'none' ? (325 * (AV_RATES[2026] || 0.013)) : 0;
+    tipRV = rvType !== 'none' ? minRV_exact : 0;
+    tipKV = (healthInsType === 'gkv' || healthInsType === 'gkv_vol') ? minKV_exact : (healthInsType === 'pkv' ? pkvPremiumMonthly : 0);
+    tipPV = minPV_exact;
+    tipAV = minAV_exact;
+    minBeitrag = tipRV + tipKV + tipPV + tipAV;
+  } else {
+    const minIncome = 325;
+    tipRV = rvType !== 'none' ? minIncome * d.rvRate : 0;
+    tipKV = healthInsType !== 'pkv' ? minIncome * (d.kvRate + avgZusatz) : pkvPremiumMonthly;
+    tipPV = minIncome * pvRate;
+    tipAV = avType !== 'none' ? minIncome * (AV_RATES[year] || 0.013) : 0;
+    minBeitrag = tipRV + tipKV + tipPV + tipAV;
+  }
+
+  const effectiveMonthlyKSK = Math.max(minBeitrag, rawMonthlyKSK);
+
+  const yearlyRV = monthlyRV * eligibleMonths;
+  const yearlyKV = monthlyKV * eligibleMonths;
+  const yearlyPV = monthlyPV * eligibleMonths;
+  const yearlyAV = monthlyAV * eligibleMonths;
+  const yearlyKSK = effectiveMonthlyKSK * eligibleMonths;
+  const kskRequired = taxableProfit >= proRatedLimit;
+  const kskYearlyDeduct = kskRequired ? yearlyKSK : 0;
+
+  // ── Income Tax ──────────────────────────────────────────
+  //
+  // For self-employed (Selbstständige), annual tax is ALWAYS determined by
+  // Einkommensteuer (Steuererklärung) — never by Steuerklasse withholding.
+  // Every person always receives the full Grundfreibetrag (12,348 EUR in 2026).
+  // Steuerklasse only affects employer Lohnsteuer withholding and
+  // Einkommensteuer-Vorauszahlungen (quarterly advance estimates).
+  //
+  const yourRawIncome = taxableProfit + otherIncome;
+
+  // ── Kinderfreibetrag (§32 Abs.6 EStG) ──────────────────
+  // Deducted from zvE before ESt. Finanzamt applies Günstigerprüfung:
+  // KFB only used if ESt saving > Kindergeld received. We apply it here
+  // as it is always the correct zvE basis; the offset is noted in the UI.
+  const kfbData      = KINDERFREIBETRAG[year] || KINDERFREIBETRAG[2026];
+  const kfbPerParent = kfbData[0] * children;   // single filer: own half per child
+  const kfbJoint     = kfbData[1] * children;   // joint: both halves per child
+
+  // ── Einkommensteuer (annual assessment — what you actually owe) ──
+  // Separate: deduct per-parent KFB from your income; spouse deducts own
+  const yourZvE  = Math.max(0, yourRawIncome - kfbPerParent);
+  const yourESt  = calcESt(year, yourZvE);
+  const yourSoli = calcSoliSimple(yourESt, false, year);
+
+  // Spouse ESt — also deducts per-parent KFB
+  const spouseZvE  = Math.max(0, spouseIncome - kfbPerParent);
+  const spouseESt  = marital === 'married' ? calcESt(year, spouseZvE) : 0;
+  const spouseSoli = calcSoliSimple(spouseESt, false, year);
+  const separateTotalESt = yourESt + spouseESt;
+
+  // Ehegattensplitting: deduct full joint KFB from combined income before halving
+  const jointIncome  = yourRawIncome + spouseIncome;
+  const jointZvE     = Math.max(0, jointIncome - kfbJoint);
+  const zvEPerPerson = marital === 'married' ? jointZvE / 2 : 0;
+  const jointESt     = marital === 'married' ? 2 * calcESt(year, zvEPerPerson) : 0;
+  const jointSoli    = calcSoliSimple(jointESt, true, year);
+
+  // ── Lohnsteuer (withholding proxy — shown separately for context) ──
+  // For a Selbstständiger this approximates what the Finanzamt may request
+  // as quarterly Vorauszahlungen based on the selected Steuerklasse.
+  const lohnsteuer = calcLohnsteuer(year, yourRawIncome, taxClass);
+
+  // Church tax: applied to chosen assessed ESt
+  const churchRate = churchMember ? (CHURCH_TAX_RATES[bundesland] || 0.09) : 0;
+
+  // ── Chosen assessment ESt (defaulted to best; user can override) ──
+  const chosenESt  = _chosenAssessment === 'joint' ? jointESt : separateTotalESt;
+  // Soli is assessed per person under separate assessment — use only the freelancer's own Soli
+  // Under joint splitting, one combined Soli is assessed on the joint ESt
+  const chosenSoli = _chosenAssessment === 'joint' ? calcSoliSimple(jointESt, true, year) : yourSoli;
+  const churchTaxYearly = chosenESt * churchRate;
+
+  // ── Full Netto ──
+  const totalDeductions = kskYearlyDeduct + chosenESt + chosenSoli + churchTaxYearly;
+  const totalIncome = totalGross + commercialIncome;
+  const netYearly = totalIncome - totalDeductions;
+  // Monthly average over eligible months only (not always 12)
+  const netMonthly = eligibleMonths > 0 ? netYearly / eligibleMonths : 0;
+  const effRate = totalIncome > 0 ? totalDeductions / totalIncome : 0;
+
+  // ──────────────────────────────────────
+  // POPULATE UI
+  // ──────────────────────────────────────
+  document.getElementById('resultYear').textContent = year;
+
+  // KSK status
+  const statusBox = document.getElementById('statusBox');
+  statusBox.className = 'status-box';
+  const headline = document.getElementById('statusHeadline');
+  const desc = document.getElementById('statusDesc');
+  const rec = document.getElementById('recBox');
+
+  if (taxableProfit < proRatedLimit) {
+    statusBox.classList.add('success');
+    headline.textContent = '✓ Safe – No KSK Required';
+    desc.textContent = `Your taxable profit of ${eur(taxableProfit)} is below the pro-rated KSK threshold of ${eur(proRatedLimit)} (325 EUR × ${eligibleMonths} months). You are not obligated to join the KSK.`;
+    rec.innerHTML = `<h3>What this means</h3><ul>
+      <li><strong>No registration required</strong> for ${year}</li>
+      <li>Continue working freely – no social contributions due via KSK</li>
+      <li>You may still voluntarily apply if your activity is artistic/journalistic</li>
+      <li>Track income carefully if you take on more work this year</li>
+    </ul>`;
+  } else if (avgMonthlyProfit < 500) {
+    statusBox.classList.add('warning');
+    headline.textContent = '⚠ Warning – Dead Zone';
+    desc.textContent = `Your profit (${eur(taxableProfit)}) exceeds the ${eur(proRatedLimit)} threshold, but avg. monthly profit (${eur(avgMonthlyProfit)}) is below the 500 EUR floor where KSK is cost-effective. You would owe the Mindestbeitrag of ${eur(minBeitrag)}/mo but earn little.`;
+    rec.innerHTML = `<h3>Options</h3><ul>
+      <li><strong>Option A:</strong> Reduce income to stay under ${eur(proRatedLimit)} – avoids KSK entirely</li>
+      <li><strong>Option B:</strong> Increase income past ~${eur(500 * eligibleMonths)} taxable profit – makes KSK worthwhile</li>
+      <li>Current situation forces minimum ~100 EUR/mo KSK payment on ${eur(avgMonthlyProfit)} average profit</li>
+      <li>Target below <strong>${eur(proRatedLimit / eligibleMonths)}/month</strong> OR above <strong>500 EUR/month</strong></li>
+    </ul>`;
+  } else {
+    statusBox.classList.add('error');
+    headline.textContent = '→ Must Join KSK';
+    desc.textContent = `Your taxable profit of ${eur(taxableProfit)} exceeds ${eur(proRatedLimit)} and your average monthly profit (${eur(avgMonthlyProfit)}) makes KSK membership financially sensible. Estimated monthly contribution: ${eur(effectiveMonthlyKSK)}.`;
+    rec.innerHTML = `<h3>Next Steps</h3><ul>
+      <li><strong>Register</strong> at <a href="https://www.kuenstlersozialkasse.de" target="_blank">kuenstlersozialkasse.de</a></li>
+      <li>Apply as "Berufsanfänger" if this is your first year as an artist/journalist</li>
+      <li>Estimated contribution: ~${eur(effectiveMonthlyKSK)}/month (KSK covers ~50% as "employer")</li>
+      <li>You receive full GKV health, nursing care, and pension insurance</li>
+      <li>Expected net take-home after KSK: <strong>${eur(avgMonthlyProfit - effectiveMonthlyKSK)}/month</strong></li>
+    </ul>`;
+  }
+
+  // Calculation rows
+  document.getElementById('rGross').textContent = eur(totalGross);
+  document.getElementById('rPauschale').textContent = pauschaleEligible
+    ? '- ' + eur(pauschaleDeduct)
+    : '0 EUR (ineligible)';
+  if (commercialIncome > 0) {
+    document.getElementById('rCommercialRow').style.display = 'flex';
+    document.getElementById('rCommercial').textContent = '+ ' + eur(commercialIncome);
+  } else {
+    document.getElementById('rCommercialRow').style.display = 'none';
+  }
+  document.getElementById('rExpenses').textContent = '- ' + eur(effectiveExpenses);
+  document.getElementById('rProfit').textContent = eur(taxableProfit);
+  document.getElementById('rMonths').textContent = eligibleMonths + ' months (start: month ' + startMonth + ')';
+  document.getElementById('rLimit').textContent = eur(proRatedLimit);
+  document.getElementById('rAvgProfit').textContent = eur(avgMonthlyProfit);
+  document.getElementById('rBBGSrv').textContent = eur(d.bbgsRV) + '/mo → capped basis ' + eur(bbgsCappedRV);
+  document.getElementById('rBBGSkv').textContent = eur(d.bbgsKV) + '/mo → capped basis ' + eur(bbgsCappedKV);
+  const parentLabel = (children > 0) ? 'with children' : 'childless';
+  document.getElementById('rMinBeitrag').textContent = !kskRequired
+    ? 'Not applicable'
+    : rawMonthlyKSK < minBeitrag
+      ? `Applied — floor: ${eur(minBeitrag)}/mo (${parentLabel})`
+      : 'Not applicable';
+
+  // Populate Mindestbeitrag tooltip with user's actual computed figures
+  const tipKVlabel = healthInsType === 'pkv' ? 'PKV premium' : `KV + Zusatzbeitrag (${(zusatz*100).toFixed(2)}%)`;
+  const tipAVlabel = avType !== 'none' ? `AV (${((AV_RATES[year]||0.013)*100).toFixed(1)}%)` : 'AV (exempt)';
+  const tipSource  = year === 2026 ? 'exact published figures' : `approximated from ${year} statutory rates`;
+  document.getElementById('tipMinBeitragContent').innerHTML = `
+    <strong>Mindestbeitrag – your personalised floor (${year})</strong><br>
+    Calculated on the statutory Mindesteinnahmen of <strong>€3,900/year (€325/mo)</strong>.
+    The KV component uses the <em>full</em> GKV rate on this base — not the halved artist share.<br><br>
+    <strong>Your figures</strong> (${parentLabel}):<br>
+    <table style="font-size:0.78rem;border-collapse:collapse;margin-top:0.4rem;width:100%">
+      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">RV (${(d.rvRate*100).toFixed(1)}%)</td>
+          <td style="color:var(--accent);font-family:var(--mono);text-align:right">${tipRV > 0 ? eur(tipRV) : '—  (exempt)'}</td></tr>
+      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">${tipKVlabel}</td>
+          <td style="color:var(--accent);font-family:var(--mono);text-align:right">${eur(tipKV)}</td></tr>
+      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">PV (${(pvRate*100).toFixed(3)}%)</td>
+          <td style="color:var(--accent);font-family:var(--mono);text-align:right">${eur(tipPV)}</td></tr>
+      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">${tipAVlabel}</td>
+          <td style="color:var(--accent);font-family:var(--mono);text-align:right">${tipAV > 0 ? eur(tipAV) : '—  (exempt)'}</td></tr>
+      <tr style="border-top:1px solid var(--border)">
+          <td style="color:var(--text);font-weight:600;padding:0.2rem 0.5rem 0 0">Total floor</td>
+          <td style="color:var(--success);font-family:var(--mono);font-weight:700;text-align:right">${eur(minBeitrag)}/mo</td></tr>
+    </table>`;
+
+  // Tax results — Einkommensteuer
+  document.getElementById('txYourIncome').textContent = eur(yourRawIncome);
+
+  // KFB rows — show only when children > 0
+  const hasKFB = children > 0;
+  document.getElementById('txKFBSeparateRow').style.display = hasKFB ? 'flex' : 'none';
+  document.getElementById('txYourZvERow').style.display     = hasKFB ? 'flex' : 'none';
+  if (hasKFB) {
+    document.getElementById('txKFBSeparate').textContent = `− ${eur(kfbPerParent)} (${children} × ${eur(kfbData[0])}/child)`;
+    document.getElementById('txYourZvE').textContent     = eur(yourZvE);
+  }
+
+  document.getElementById('txYourTax').textContent = eur(yourESt)
+    + (yourESt === 0 ? ' (below Grundfreibetrag' + (hasKFB ? ' + KFB' : '') + ')' : '');
+  document.getElementById('txTotalSeparate').textContent = eur(separateTotalESt);
+  document.getElementById('txSoli').textContent = yourSoli > 0 ? eur(yourSoli) : '0 EUR (below threshold)';
+  document.getElementById('txChurchLine').textContent = churchMember
+    ? `${eur(churchTaxYearly)} (${(churchRate*100).toFixed(0)}% of ESt · ${bundesland})`
+    : '0 EUR (not a member)';
+  const lohnsteuerEl = document.getElementById('txLohnsteuer');
+  if (lohnsteuerEl) lohnsteuerEl.textContent =
+    `${eur(lohnsteuer)} (Steuerklasse ${taxClass} withholding — advance payment proxy only)`;
+
+  if (marital === 'married') {
+    document.getElementById('txSpouseRow').style.display = 'flex';
+    document.getElementById('txSpouseTaxRow').style.display = 'flex';
+    document.getElementById('txSpouseIncome').textContent = eur(spouseIncome);
+    document.getElementById('txSpouseTax').textContent = eur(spouseESt)
+      + (spouseESt === 0 ? ' (below Grundfreibetrag)' : '');
+    document.getElementById('jointPanel').classList.remove('hidden');
+    document.getElementById('txJointIncome').textContent = eur(jointIncome);
+    // KFB rows in joint panel
+    document.getElementById('txKFBJointRow').style.display  = hasKFB ? 'flex' : 'none';
+    document.getElementById('txJointZvERow').style.display  = hasKFB ? 'flex' : 'none';
+    if (hasKFB) {
+      document.getElementById('txKFBJoint').textContent = `− ${eur(kfbJoint)} (${children} × ${eur(kfbData[1])}/child)`;
+      document.getElementById('txJointZvE').textContent = eur(jointZvE);
+    }
+    document.getElementById('txJointHalf').textContent = eur(zvEPerPerson) + ' (zvE ÷ 2)';
+    document.getElementById('txTotalJoint').textContent = eur(jointESt);
+    const savings = separateTotalESt - jointESt;
+    document.getElementById('txSavings').textContent = savings > 0
+      ? `+ ${eur(savings)} saved vs. separate`
+      : (savings < 0 ? `${eur(Math.abs(savings))} more than separate` : '0 EUR (no difference)');
+    document.getElementById('separatePanel').classList.remove('best');
+    document.getElementById('jointPanel').classList.remove('best');
+    _chosenAssessment = jointESt < separateTotalESt ? 'joint' : 'separate';
+    if (jointESt < separateTotalESt) {
+      document.getElementById('jointPanel').classList.add('best');
+    } else {
+      document.getElementById('separatePanel').classList.add('best');
+    }
+  } else {
+    document.getElementById('txSpouseRow').style.display = 'none';
+    document.getElementById('txSpouseTaxRow').style.display = 'none';
+    document.getElementById('jointPanel').classList.add('hidden');
+    _chosenAssessment = 'separate';
+  }
+  // Reflect chosen assessment on buttons
+  selectAssessment(_chosenAssessment);
+
+  // ── Store calc state for renderSummary ──
+  _cs = {
+    year,
+    totalGross, totalIncome, taxableProfit, totalDeductions, effRate,
+    yourESt, yourSoli, churchTaxYearly, churchRate,
+    chosenESt, chosenSoli,
+    separateTotalESt, jointESt, jointSoli,
+    netMonthly, netYearly, yourRawIncome, qualifyingGross,
+    kskRequired, yearlyKSK, yearlyRV, yearlyKV, yearlyPV, yearlyAV,
+    pvRate, children, eligibleMonths, proRatedLimit,
+    d, avgMonthlyProfit, healthInsType, rvType, avType,
+    lohnsteuer, taxClass, effectiveExpenses, commercialIncome,
+    kfbPerParent, kfbJoint, kfbData, yourZvE, spouseZvE,
+    jointIncome, spouseIncome
+  };
+
+  // ── Dynamic KSK rate display ──
+  const kvRateDisplay = healthInsType !== 'pkv'
+    ? ((d.kvRate + zusatz / 2) * 100).toFixed(2) + '% (GKV base+Zusatz/2)'
+    : 'PKV – own premium';
+  const pvRateDisplay = (pvRate * 100).toFixed(2) + '%'
+    + (children === 0 && age > 23 ? ' (no-child surcharge)' : '')
+    + (isSachsen ? ' (+Sachsen 0.5%)' : '');
+  document.getElementById('ntRVrate').textContent = rvType !== 'none' ? (d.rvRate * 100).toFixed(1) + '%' : 'exempt';
+  document.getElementById('ntKVrate').textContent = kvRateDisplay;
+  document.getElementById('ntPVrate').textContent = pvRateDisplay;
+
+  // ── BBGS cap label values (dynamic per year) ──
+  document.getElementById('rBBGSrvCap').textContent = d.bbgsRV.toLocaleString('de-DE') + ' EUR';
+  document.getElementById('rBBGSkvCap').textContent = d.bbgsKV.toLocaleString('de-DE') + ' EUR';
+
+  // Netto breakdown
+  // Gross = totalIncome; qualifying and commercial as sub-lines
+  document.getElementById('ntGross').textContent = eur(totalIncome);
+  document.getElementById('ntQualifying').textContent = eur(totalGross);
+  document.getElementById('ntQualifyingRow').style.display = commercialIncome > 0 ? 'flex' : 'none';
+  if (commercialIncome > 0) {
+    document.getElementById('ntCommercialRow').style.display = 'flex';
+    document.getElementById('ntCommercial').textContent = eur(commercialIncome);
+  } else {
+    document.getElementById('ntCommercialRow').style.display = 'none';
+  }
+  // Taxable profit row — label varies by activity type
+  const isMixedCalc = activity === 'mixed' && pauschaleEligible;
+  document.getElementById('ntTaxableProfit').textContent = eur(taxableProfit);
+  document.getElementById('taxableProfitLabel').textContent = pauschaleEligible
+    ? (effectiveExpenses < businessExpenses && businessExpenses > 0
+        ? '(gross − pauschale − expenses above pauschale, §3 Nr. 26 Satz 2)'
+        : '(gross − pauschale − expenses)')
+    : '(gross − expenses)';
+
+  // Total income row — show only when other income adds to the freelance base
+  const rawIncomeRow = document.getElementById('ntYourRawIncomeRow');
+  if (otherIncome > 0) {
+    rawIncomeRow.style.display = 'flex';
+    document.getElementById('ntYourRawIncome').textContent = eur(yourRawIncome);
+  } else {
+    rawIncomeRow.style.display = 'none';
+  }
+
+  // KSK rows: show actual figures if required, otherwise show N/A
+  if (kskRequired) {
+    document.getElementById('ntKSKLabel').textContent = 'KSK contributions (required – deducted)';
+    document.getElementById('ntKSKRow').className = 'row deduct';
+    document.getElementById('ntKSKTotal').textContent = '- ' + eur(yearlyKSK);
+    document.getElementById('ntRVRow').style.display = rvType !== 'none' ? 'flex' : 'none';
+    document.getElementById('ntKVRow').style.display = 'flex';
+    document.getElementById('ntPVRow').style.display = 'flex';
+    document.getElementById('ntAVRow').style.display = avType !== 'none' ? 'flex' : 'none';
+    document.getElementById('ntRV').textContent = '- ' + eur(yearlyRV);
+    document.getElementById('ntKV').textContent = '- ' + eur(yearlyKV);
+    document.getElementById('ntPV').textContent = '- ' + eur(yearlyPV);
+    document.getElementById('ntAV').textContent = '- ' + eur(yearlyAV);
+    document.getElementById('ntAVrate').textContent = avType !== 'none' ? ((AV_RATES[year] || 0.013) * 100).toFixed(1) + '%' : 'exempt';
+  } else {
+    document.getElementById('ntKSKLabel').textContent = 'KSK contributions';
+    document.getElementById('ntKSKRow').className = 'row';
+    document.getElementById('ntKSKTotal').textContent = '0 EUR (not required)';
+    document.getElementById('ntKSKTotal').style.color = 'var(--success)';
+    document.getElementById('ntRVRow').style.display = 'none';
+    document.getElementById('ntKVRow').style.display = 'none';
+    document.getElementById('ntPVRow').style.display = 'none';
+    document.getElementById('ntAVRow').style.display = 'none';
+  }
+  const estLabelCalc = _chosenAssessment === 'joint' ? 'Ehegattensplitting (joint)' : 'getrennte Veranlagung (separate)';
+  document.getElementById('ntEStLabel').textContent = estLabelCalc;
+  document.getElementById('ntESt').textContent = chosenESt > 0 ? ('- ' + eur(chosenESt)) : '0 EUR (below Grundfreibetrag)';
+  document.getElementById('ntSoli2').textContent = chosenSoli > 0 ? ('- ' + eur(chosenSoli)) : '0 EUR';
+  document.getElementById('ntChurch').textContent = churchRate > 0 ? ('- ' + eur(churchTaxYearly)) : '0 EUR (none)';
+  document.getElementById('ntTotalDeduct').textContent = eur(totalDeductions);
+  document.getElementById('ntEffRate').textContent = pct(effRate);
+
+  // Render with current period toggle (default monthly)
+  renderSummary();
+
+  // ── Headroom: how much more gross can be earned before KSK triggers ──
+  const headroomBox = document.getElementById('headroomBox');
+  if (!kskRequired) {
+    // headroom = (proRatedLimit - taxableProfit) remaining taxable profit
+    // gross headroom = taxable headroom (expenses already deducted)
+    const taxableHeadroom = proRatedLimit - taxableProfit;
+    const monthlyTaxableHeadroom = taxableHeadroom / eligibleMonths;
+    headroomBox.style.display = 'block';
+    headroomBox.className = taxableHeadroom < proRatedLimit * 0.25 ? 'headroom-box warn' : 'headroom-box';
+    headroomBox.innerHTML = `
+      <div class="headroom-amount">${eur(monthlyTaxableHeadroom)}/mo</div>
+      <div class="headroom-desc">
+        <strong>Additional monthly profit before KSK is required</strong><br>
+        You can earn ~${eur(monthlyTaxableHeadroom)} more per month in taxable profit (avg. over ${eligibleMonths} months)
+        before crossing the KSK threshold of ${eur(proRatedLimit)} total for ${year}.
+        That's ${eur(taxableHeadroom)} remaining taxable headroom this year.
+      </div>`;
+  } else {
+    headroomBox.style.display = 'none';
+  }
+
+  const bbgsNote = [];
+  if (avgMonthlyProfit > d.bbgsRV) bbgsNote.push(`RV contribution capped at BBGS ${eur(d.bbgsRV)}/mo`);
+  if (avgMonthlyProfit > d.bbgsKV) bbgsNote.push(`KV/PV contribution capped at BBGS ${eur(d.bbgsKV)}/mo`);
+  document.getElementById('ntBbgsNote').textContent = bbgsNote.length
+    ? 'ℹ BBGS caps applied: ' + bbgsNote.join('; ')
+    : '';
+  document.getElementById('ntBbgsNote').style.display = bbgsNote.length ? 'block' : 'none';
+
+  // Show all result sections
+  document.getElementById('taxResults').classList.add('show');
+  document.getElementById('nettoResults').classList.add('show');
+  document.getElementById('kskResults').classList.add('show');
+  document.getElementById('kskResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ──────────────────────────────────────────────────────────
+// TEACHING INCOME CALCULATOR — multi-variation
+// ──────────────────────────────────────────────────────────
+let _varCounter = 0;
+
+function durationOptions(selected) {
+  const opts = [['0.5','30 min'],['0.75','45 min'],['1','1 hr'],['1.5','1.5 hr'],['2','2 hr']];
+  return opts.map(([v,l]) => `<option value="${v}"${v===selected?' selected':''}>${l}</option>`).join('');
+}
+function sessionsOptions(selected) {
+  const opts = ['1','2','3','4','5','6','7'];
+  return opts.map(v => `<option value="${v}"${v===selected?' selected':''}>${v}×/wk</option>`).join('');
+}
+function weeksOptions(selected) {
+  const opts = [['1','1 wk'],['2','2 wk'],['3','3 wk'],['4','4 wk'],['4.33','4.33 wk']];
+  return opts.map(([v,l]) => `<option value="${v}"${v===selected?' selected':''}>${l}</option>`).join('');
+}
+
+function addVariationRow(label='', students='', rate='', duration='1', sessions='2', weeks='4') {
+  const id = ++_varCounter;
+  const row = document.createElement('div');
+  row.id = `vrow-${id}`;
+  row.className = 'tc-row';
+  row.setAttribute('data-rowlabel', `Variation ${id}`);
+  row.innerHTML = `
+    <div class="tc-cell-label">
+      <div class="tc-mobile-label">Label</div>
+      <input type="text" id="vLabel-${id}" value="${label}" placeholder="e.g. Group A" class="tc-input" oninput="recalcTeaching(); this.closest('.tc-row').setAttribute('data-rowlabel', this.value || 'Variation ${id}')">
+    </div>
+    <div>
+      <div class="tc-mobile-label">Students / group size</div>
+      <input type="number" id="vStudents-${id}" value="${students}" placeholder="e.g. 5" min="1" step="1" class="tc-input" oninput="recalcTeaching()">
+    </div>
+    <div>
+      <div class="tc-mobile-label">Hourly rate (EUR)</div>
+      <input type="number" id="vRate-${id}" value="${rate}" placeholder="e.g. 35" min="0" step="0.5" class="tc-input" oninput="recalcTeaching()">
+    </div>
+    <div>
+      <div class="tc-mobile-label">Session length</div>
+      <select id="vDur-${id}" class="tc-input" onchange="recalcTeaching()">${durationOptions(duration)}</select>
+    </div>
+    <div>
+      <div class="tc-mobile-label">Sessions / week</div>
+      <select id="vSessions-${id}" class="tc-input" onchange="recalcTeaching()">${sessionsOptions(sessions)}</select>
+    </div>
+    <div>
+      <div class="tc-mobile-label">Weeks / month</div>
+      <select id="vWeeks-${id}" class="tc-input" onchange="recalcTeaching()">${weeksOptions(weeks)}</select>
+    </div>
+    <div id="vResult-${id}" class="tc-row-result">—</div>
+    <button onclick="removeVariationRow(${id})" class="tc-remove" title="Remove">×</button>`;
+  document.getElementById('variationRows').appendChild(row);
+  recalcTeaching();
+}
+
+function removeVariationRow(id) {
+  const el = document.getElementById(`vrow-${id}`);
+  if (el) el.remove();
+  // Keep at least one row
+  if (!document.getElementById('variationRows').children.length) addVariationRow();
+  else recalcTeaching();
+}
+
+function recalcTeaching() {
+  const rows = document.getElementById('variationRows').children;
+  let totalMonthly = 0, totalHrsWeek = 0;
+  let anyData = false;
+
+  Array.from(rows).forEach(row => {
+    const id = row.id.replace('vrow-','');
+    const students = parseFloat(document.getElementById(`vStudents-${id}`).value) || 0;
+    const rate     = parseFloat(document.getElementById(`vRate-${id}`).value)     || 0;
+    const dur      = parseFloat(document.getElementById(`vDur-${id}`).value)      || 1;
+    const sessions = parseFloat(document.getElementById(`vSessions-${id}`).value) || 2;
+    const weeks    = parseFloat(document.getElementById(`vWeeks-${id}`).value)    || 4;
+    const resEl    = document.getElementById(`vResult-${id}`);
+
+    if (students && rate) {
+      anyData = true;
+      const perSession = students * rate * dur;
+      const monthly    = perSession * sessions * weeks;
+      totalMonthly    += monthly;
+      totalHrsWeek    += students * dur * sessions; // contact hours/week
+      resEl.textContent = eur(monthly);
+      resEl.style.color = 'var(--success)';
+    } else {
+      resEl.textContent = '—';
+      resEl.style.color = 'var(--muted)';
+    }
+  });
+
+  // Totals
+  const resultEl  = document.getElementById('calcResult');
+  const hrsEl     = document.getElementById('totalHrsWeek');
+  const btnAll    = document.getElementById('btnApplyAll');
+  const btnFuture = document.getElementById('btnApplyFuture');
+  const warnBadge = document.getElementById('hoursWarning');
+  const warnDetail = document.getElementById('hoursWarningDetail');
+
+  if (anyData) {
+    resultEl.textContent = eur(totalMonthly) + ' / mo';
+    hrsEl.textContent = totalHrsWeek.toFixed(1) + ' hrs';
+    btnAll.disabled = false; btnAll.style.opacity = '1';
+    btnFuture.disabled = false; btnFuture.style.opacity = '1';
+    btnAll.dataset.monthly = totalMonthly;
+    btnFuture.dataset.monthly = totalMonthly;
+  } else {
+    resultEl.textContent = '—';
+    hrsEl.textContent = '—';
+    btnAll.disabled = true; btnAll.style.opacity = '0.4';
+    btnFuture.disabled = true; btnFuture.style.opacity = '0.4';
+  }
+
+  // Hours / nebenberuflich warning
+  if (anyData && totalHrsWeek > 0) {
+    hrsEl.style.color = totalHrsWeek >= 14 ? 'var(--error)' : totalHrsWeek >= 11 ? 'var(--warn)' : 'var(--success)';
+    if (totalHrsWeek >= 14) {
+      warnBadge.textContent = '⚠ ' + totalHrsWeek.toFixed(1) + ' hrs/wk — over 14 hr limit';
+      warnBadge.style.cssText = 'font-size:0.76rem;font-weight:600;padding:0.25rem 0.65rem;border-radius:4px;background:rgba(245,83,106,0.15);color:var(--error);border:1px solid var(--error);';
+      warnBadge.style.display = 'inline-block';
+      warnDetail.style.display = 'block';
+      warnDetail.style.cssText = 'display:block;margin-top:0.6rem;font-size:0.8rem;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid var(--error);background:rgba(245,83,106,0.08);color:var(--error);';
+      warnDetail.innerHTML = `<strong>⛔ Over the nebenberuflich threshold.</strong> Your schedule totals <strong>${totalHrsWeek.toFixed(1)} contact hours/week</strong>, which exceeds the 14 hr/week limit for §3 Nr. 26 EStG eligibility. Please review <strong>01 · Basic Information → "Average weekly hours on this activity"</strong> and set it to <em>"14 hrs/week or more"</em> — this will affect your Übungsleiterpauschale and KSK eligibility.`;
+    } else if (totalHrsWeek >= 11) {
+      warnBadge.textContent = '⚠ ' + totalHrsWeek.toFixed(1) + ' hrs/wk — approaching limit';
+      warnBadge.style.cssText = 'font-size:0.76rem;font-weight:600;padding:0.25rem 0.65rem;border-radius:4px;background:rgba(245,200,66,0.13);color:var(--warn);border:1px solid var(--warn);';
+      warnBadge.style.display = 'inline-block';
+      warnDetail.style.display = 'block';
+      warnDetail.style.cssText = 'display:block;margin-top:0.6rem;font-size:0.8rem;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid var(--warn);background:rgba(245,200,66,0.07);color:var(--warn);';
+      warnDetail.innerHTML = `<strong>⚠ Approaching the 14 hr/week limit.</strong> Your schedule totals <strong>${totalHrsWeek.toFixed(1)} contact hours/week</strong>. The nebenberuflich threshold is 14 hrs/week averaged over the year. If your schedule fluctuates or you add more students, you risk losing your §3 Nr. 26 Übungsleiterpauschale. Monitor your actual hours carefully.`;
+    } else {
+      warnBadge.style.display = 'none';
+      warnDetail.style.display = 'none';
+    }
+  } else {
+    warnBadge.style.display = 'none';
+    warnDetail.style.display = 'none';
+  }
+}
+
+function applyToAllMonths() {
+  const amount = parseFloat(document.getElementById('btnApplyAll').dataset.monthly) || 0;
+  if (!amount) return;
+  document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])').forEach(inp => {
+    inp.value = amount.toFixed(2);
+  });
+}
+
+function applyToFutureMonths() {
+  const amount = parseFloat(document.getElementById('btnApplyFuture').dataset.monthly) || 0;
+  if (!amount) return;
+  const startMonth   = parseInt(document.getElementById('startMonth').value);
+  const currentMonth = new Date().getMonth() + 1;
+  document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])').forEach(inp => {
+    const m = parseInt(inp.dataset.month);
+    if (m >= Math.max(startMonth, currentMonth)) inp.value = amount.toFixed(2);
+  });
+}
+
+// ──────────────────────────────────────────────────────────
+// VAT / UMSATZSTEUER NOTE
+// ──────────────────────────────────────────────────────────
+function updateVatNote() {
+  const status   = document.getElementById('vatStatus').value;
+  const activity = document.getElementById('pauschaleActivity').value;
+  const turnover = parseFloat(document.getElementById('vatTurnover').value) || 0;
+  const noteEl   = document.getElementById('vatNote');
+  const turnoverGroup = document.getElementById('vatTurnoverGroup');
+
+  // Show/hide turnover input
+  turnoverGroup.style.display = (status === 'kleinunternehmer') ? '' : 'none';
+
+  let msg = '', color = '';
+
+  if (status === 'befreit') {
+    msg = '✓ Your activity type is fully VAT-exempt under §4 UStG. No VAT registration, no invoicing of VAT, no Umsatzsteuervoranmeldung required.';
+    color = 'var(--success)';
+  } else if (status === 'kleinunternehmer') {
+    if (!turnover) {
+      msg = 'Enter your estimated annual turnover to check Kleinunternehmer eligibility.';
+      color = 'var(--muted)';
+    } else if (turnover <= 22000) {
+      msg = `✓ Kleinunternehmer eligible — turnover ${eur(turnover)} is within the €22,000 prior-year limit. Add "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet." to all invoices. Watch your current-year limit of €50,000.`;
+      color = 'var(--success)';
+    } else if (turnover <= 50000) {
+      msg = `⚠ Turnover ${eur(turnover)} exceeds the €22,000 prior-year threshold — you likely cannot claim Kleinunternehmer status next year. If this is your current year, check whether last year was ≤ €22,000.`;
+      color = 'var(--warn)';
+    } else {
+      msg = `✗ Turnover ${eur(turnover)} exceeds €50,000. Regelbesteuerung is mandatory — you must charge 19% VAT (or 7% for eligible services) and file quarterly Voranmeldungen.`;
+      color = 'var(--error)';
+    }
+    // Special note for §3 Nr. 26 qualified activity
+    if (activity === 'qualified' && turnover <= 22000) {
+      msg += ' Note: your §3 Nr. 26 qualified activity may also qualify for §4 Nr. 21/22 UStG exemption — check with your Finanzamt whether VAT registration is needed at all.';
+    }
+  } else {
+    msg = 'Regelbesteuerung: charge 19% VAT on standard services (7% on books, some cultural services). File monthly or quarterly Umsatzsteuervoranmeldung (Elster). Keep input tax (Vorsteuer) records for deduction.';
+    color = 'var(--accent)';
+  }
+
+  noteEl.textContent = msg;
+  noteEl.style.color = color;
+  noteEl.style.display = msg ? '' : 'none';
+}
+
+
+(function init() {
+  // Auto-select current year
+  const cy = new Date().getFullYear();
+  const yearSel = document.getElementById('year');
+  const validYear = Math.min(Math.max(cy, 2020), 2026);
+  yearSel.value = validYear;
+
+  buildMonthGrid();
+  updateYearFigures();
+  applyStartMonth();
+  updatePauschaleEligibility();
+  updateVatNote();
+  addVariationRow(); // start with one empty row
+  onKasseChange(); // initialise Krankenkasse dropdown state
+
+  yearSel.addEventListener('change', () => { updateYearFigures(); applyStartMonth(); updatePauschaleNote(); updatePauschaleEligibility(); });
+  document.getElementById('startMonth').addEventListener('change', applyStartMonth);
+  document.getElementById('pauschaleActivity').addEventListener('change', updatePauschaleEligibility);
+  document.getElementById('weeklyHours').addEventListener('change', updatePauschaleEligibility);
+  document.getElementById('commercialIncome').addEventListener('input', () => {
+    updatePauschaleEligibility();
+    const val = parseFloat(document.getElementById('commercialIncome').value) || 0;
+    if (val > 0) document.getElementById('otherIncome').value = '0';
+  });
+  document.getElementById('healthInsType').addEventListener('change', onHealthInsChange);
+  document.getElementById('churchMember').addEventListener('change', () => {});
+  document.getElementById('vatStatus').addEventListener('change', updateVatNote);
+  document.getElementById('vatTurnover').addEventListener('input', updateVatNote);
+  document.getElementById('pauschaleActivity').addEventListener('change', updateVatNote);
+})();
+</script>
+</body>
+</html>
