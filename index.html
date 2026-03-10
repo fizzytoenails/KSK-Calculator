@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     --bg: #0b0f1a;
     --surface: #131927;
     --surface2: #1a2235;
+    --card: #131927;
     --border: rgba(99,132,180,0.18);
     --accent: #4fc3f7;
     --accent2: #81d4fa;
@@ -37,6 +38,147 @@ document.addEventListener('DOMContentLoaded', function() {
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
   }
+  /* ── Light theme ── */
+  [data-theme="light"] {
+    --bg: #f0f4fa;
+    --surface: #ffffff;
+    --surface2: #e8edf7;
+    --card: #ffffff;
+    --border: rgba(60,90,140,0.18);
+    --accent: #1a7fc1;
+    --accent2: #1565a8;
+    --text: #1a2340;
+    --muted: #5a6e8a;
+    --success: #1a9960;
+    --warn: #b07d00;
+    --error: #c0203a;
+  }
+  /* ── Settings FAB & panel ── */
+  #settingsFab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    z-index: 1000;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+  }
+  #settingsFab:hover { background: var(--accent); color: var(--bg); transform: rotate(30deg); }
+  #settingsPanel {
+    position: fixed;
+    bottom: 5rem;
+    right: 1.5rem;
+    width: 240px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #settingsPanel.open { display: flex; }
+  .settings-section-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    font-family: var(--mono);
+  }
+  .settings-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .settings-btn {
+    flex: 1;
+    padding: 0.35rem 0.3rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .settings-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .settings-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  [data-theme="light"] .settings-btn.active { color: #fff; }
+  .settings-divider { height: 1px; background: var(--border); margin: 0 -1.2rem; }
+  /* ── Makeup-lesson tooltips ── */
+  .makeup-tip-btn {
+    font-size: 0.68rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    font-weight: 700;
+    vertical-align: middle;
+  }
+  .warn-tip-btn  { border: 1.5px solid var(--warn);  background: rgba(245,200,66,0.12); color: var(--warn); }
+  .error-tip-btn { border: 1.5px solid var(--error); background: rgba(245,83,106,0.12); color: var(--error); }
+  .makeup-tip-btn:hover { opacity: 0.8; }
+  .makeup-tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    white-space: nowrap;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4);
+    pointer-events: none;
+    font-family: var(--mono);
+  }
+  .makeup-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+  }
+  .warn-tip {
+    background: #1e1a08;
+    border: 1.5px solid var(--warn);
+    color: #f5e288;
+  }
+  [data-theme="light"] .warn-tip {
+    background: #fffbe6;
+    color: #7a5900;
+  }
+  .warn-tip::after { border-top-color: var(--warn); }
+  .error-tip {
+    background: #1e080a;
+    border: 1.5px solid var(--error);
+    color: #f5a3ad;
+  }
+  [data-theme="light"] .error-tip {
+    background: #fff0f2;
+    color: #8b1020;
+  }
+  .error-tip::after { border-top-color: var(--error); }
+  .makeup-tip.visible { display: block; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: var(--sans);
@@ -448,7 +590,64 @@ document.addEventListener('DOMContentLoaded', function() {
   .info-btn:hover { background: rgba(79,195,247,0.28); }
 
   /* ─── Teaching Calculator ─── */
-  #teachingCalc {
+  #ehrenamtCalc {
+    background: rgba(129,199,132,0.04);
+    border: 1px solid rgba(129,199,132,0.2);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #ehrenamtCalc .tc-col-headers span { color: var(--muted); }
+  .ec-row {
+    display: grid;
+    grid-template-columns: 2fr 1.4fr 1.4fr 1.4fr 1.3fr 1.8rem;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+  .ec-row input, .ec-row select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.42rem 0.5rem;
+    width: 100%;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select.ec-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2381c784' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.4rem center;
+    padding-right: 1.5rem;
+  }
+  .ec-row input:focus, .ec-row select:focus { border-color: var(--accent2); outline: none; }
+  .ec-row-result {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--accent2);
+    text-align: right;
+    white-space: nowrap;
+  }
+  @media (max-width: 520px) {
+    .ec-row {
+      display: flex !important;
+      flex-direction: column;
+      gap: 0;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.55rem;
+      position: relative;
+    }
+    .ec-row > div { margin-bottom: 0.45rem; }
+    #ehrenamtCalc .tc-col-headers { display: none; }
+  }
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -610,8 +809,91 @@ document.addEventListener('DOMContentLoaded', function() {
     border-top: 1px solid var(--border);
   }
 
-  /* Mobile: stack each variation row as a card with field labels */
+  /* ── Vacation Calculator ── */
+  .vac-col-headers, .sick-col-headers {
+    display: grid;
+    grid-template-columns: 1.6fr 1.3fr 1.3fr 0.9fr 1.2fr 1.8rem;
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+  }
+  .vac-col-headers span, .sick-col-headers span {
+    font-size: 0.69rem;
+    color: var(--muted);
+    padding: 0 0.1rem;
+  }
+  .vac-row, .sick-row {
+    display: grid;
+    grid-template-columns: 1.6fr 1.3fr 1.3fr 0.9fr 1.2fr 1.8rem;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+  .vac-row input[type="date"],
+  .vac-row input[type="text"],
+  .vac-row .date-display,
+  .sick-row input[type="text"],
+  .sick-row input[type="date"],
+  .sick-row .date-display {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.42rem 0.5rem;
+    width: 100%;
+    min-width: 0;
+    color-scheme: dark;
+  }
+  .date-field {
+    position: relative;
+    width: 100%;
+  }
+  .date-display { pointer-events: none; position: relative; z-index: 1; }
+  .date-picker {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .vac-row input:focus { border-color: var(--warn); outline: none; }
+  .sick-row input:focus { border-color: var(--error); outline: none; }
+  .vac-days { font-family: var(--mono); font-size: 0.82rem; color: var(--warn); text-align:center; }
+  .vac-lost { font-family: var(--mono); font-size: 0.82rem; color: var(--warn); text-align: right; white-space: nowrap; }
+  .sick-days { font-family: var(--mono); font-size: 0.82rem; color: var(--error); text-align:center; }
+  .sick-lost { font-family: var(--mono); font-size: 0.82rem; color: var(--error); text-align: right; white-space: nowrap; }
+  .vac-days.empty, .vac-lost.empty, .sick-days.empty, .sick-lost.empty { color: var(--muted); }
+  .work-schedule {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .work-day {
+    display: flex; align-items: center; gap: 0.3rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.3rem 0.55rem;
+    font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .work-day.active { border-color: var(--accent); background: rgba(100,210,255,0.07); }
   @media (max-width: 520px) {
+    .vac-col-headers, .sick-col-headers { display: none; }
+    .vac-row, .sick-row {
+      display: flex !important;
+      flex-direction: column;
+      gap: 0.35rem;
+      border-radius: 7px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.55rem;
+      position: relative;
+    }
+    .vac-row { background: rgba(245,200,66,0.04); border: 1px solid rgba(245,200,66,0.2); }
+    .sick-row { background: rgba(245,83,106,0.04); border: 1px solid rgba(245,83,106,0.2); }
+    .vac-row input, .sick-row input { font-size: 0.9rem; }
+    .vac-days, .vac-lost, .sick-days, .sick-lost { text-align: left; }
     body { padding: 1rem 0.65rem 3rem; }
     .card { padding: 1rem; }
     .header-text h1 { font-size: 1.35rem; }
@@ -698,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
      CARD 1 · BASIC INFORMATION
 ════════════════════════════════════════════════════════ -->
 <div class="card">
-  <div class="card-title">01 · Basic Information <span class="badge">Required</span></div>
+  <div class="card-title">01 · Basic Information</div>
 
 
   <div class="form-row">
@@ -729,23 +1011,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="form-row">
     <div class="form-group">
-      <label>Activity type <span class="legal">§3 Nr. 26 EStG</span></label>
+      <label>Activity type <span class="legal">§3 Nr. 26 EStG</span>
+        <button type="button" class="info-btn" onclick="toggleTip('activityNote')">?</button>
+      </label>
       <select id="pauschaleActivity" onchange="updatePauschaleEligibility()">
         <option value="qualified">Teaching, coaching, caregiving, arts, or sport – for non-profit/public body</option>
         <option value="commercial">Commercial freelance work (no qualifying non-profit/public client)</option>
         <option value="mixed">Mixed – some qualifying, some commercial</option>
       </select>
-      <div class="note" id="activityNote">
+      <div class="tip-panel" id="activityNote">
         §3 Nr. 26 EStG exempts up to <strong><span id="pauschaleNote">3,300</span> EUR/yr</strong> from tax and social contributions — claimed in your <em>Steuererklärung</em>, not a special invoicing method. Applies to teaching, coaching, caregiving, or artistic work for non-profit associations, churches, municipalities, or public-law bodies.
+      </div>
+      <!-- Commercial income split — only shown for Mixed activity type -->
+      <div id="mixedSplitGroup" class="hidden" style="margin-top:0.75rem;">
+        <div class="form-group" style="margin:0;">
+          <label>
+            Commercial income within this activity (EUR/yr)
+            <button type="button" class="info-btn" onclick="toggleTip('tipMixedSplit')">?</button>
+          </label>
+          <div class="input-wrap">
+            <input type="number" id="commercialIncome" value="0" min="0" step="0.01" placeholder="0.00">
+            <span class="eur">EUR</span>
+          </div>
+          <div class="tip-panel" id="tipMixedSplit">
+            <strong>Mixed activity — commercial income</strong><br><br>
+            Enter commercial income that is <strong>not already in the monthly income grid</strong> (Card 2). The grid should contain your qualifying §3 Nr. 26 income only (invoiced to non-profit / public bodies).<br><br>
+            The §3 Nr. 26 Pauschale is applied in full against the grid income. The commercial amount you enter here is added directly on top as fully taxable — it is never offset by the Pauschale.<br><br>
+            <strong>Example:</strong> Grid = €6,216 from a non-profit choir. You also earn €75 from private lessons (commercial). Enter €75 here.<br>
+            Result: (€6,216 − €3,300) + €75 = <strong>€2,991 taxable profit</strong>.
+          </div>
+          <div class="note" id="mixedSplitNote"></div>
+        </div>
       </div>
     </div>
     <div class="form-group" id="hoursGroup">
-      <label>Average weekly hours on this activity</label>
+      <label>Average weekly hours on this activity
+        <button type="button" class="info-btn" onclick="toggleTip('hoursNote')">?</button>
+      </label>
       <select id="weeklyHours" onchange="updatePauschaleEligibility()">
         <option value="under14">Under 14 hrs/week (nebenberuflich ✓)</option>
         <option value="over14">14 hrs/week or more (may not qualify)</option>
       </select>
-      <div class="note" id="hoursNote">
+      <div class="tip-panel" id="hoursNote">
         <strong>Nebenberuflich</strong> means the activity takes up no more than ⅓ of a comparable full-time role — in practice, max. <strong>14 hrs/week averaged over the year</strong>. You do <em>not</em> need another job: students, retirees, unemployed persons, and Hausfrauen/Hausmänner all qualify if the time criterion is met (BMF guidance, §3 Nr. 26).
       </div>
     </div>
@@ -797,29 +1104,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div id="adminMixNote" style="display:none;" class="note" style="margin-top:0.4rem;"></div>
       </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Also claiming Ehrenamtspauschale? <span class="legal">§3 Nr. 26a</span>
-          <button type="button" class="info-btn" onclick="toggleTip('tipEhrenamt')">?</button>
-        </label>
-        <select id="ehrenamtToggle" onchange="updatePauschaleEligibility()">
-          <option value="no">No — only §3 Nr. 26 Übungsleiterpauschale</option>
-          <option value="yes">Yes — also claiming §3 Nr. 26a (different role)</option>
-        </select>
-        <div class="tip-panel" id="tipEhrenamt">
-          <strong>Ehrenamtspauschale (§3 Nr. 26a EStG) — <span id="ehrenamtAmt1">960</span> EUR/yr</strong><br><br>
-          A separate allowance of <strong><span id="ehrenamtAmt2">960</span> EUR/year</strong> for honorary/volunteer roles such as:<br>
-          · Board member (Vorstandsmitglied) of a non-profit<br>
-          · Treasurer (Kassenwart) or secretary<br>
-          · Administrative volunteer for a charity or association<br><br>
-          <strong>Stackable with the Übungsleiterpauschale</strong>, but only when the two roles are <em>genuinely separate</em> — different activities, documented in separate contracts. You cannot split one role across both allowances.<br><br>
-          Like the Übungsleiterpauschale, the Ehrenamtspauschale is claimed in your <em>Steuererklärung</em> and requires the organisation to be a non-profit, church, municipality, or public-law body. It reduces your taxable income by an additional <span id="ehrenamtAmt3">960</span> EUR.
-        </div>
-        <div id="ehrenamtNote" class="note" style="margin-top:0.4rem;display:none;"></div>
-      </div>
-    </div>
   </div>
 
   <!-- Contract checklist — collapsible -->
@@ -861,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function() {
           Separate contract exists for §3 Nr. 26a Ehrenamts role (different from §3 Nr. 26 teaching role)
         </label>
       </div>
-      <div class="note" style="margin-top:0.75rem;">
+      <div class="note" style="margin-top:0.75rem;display:flex;align-items:flex-start;gap:0.4rem;">
         ⚠ This tool does not verify your contract. A missing or incomplete contract may result in the Finanzamt disallowing the Pauschale on audit.
       </div>
     </div>
@@ -893,37 +1177,14 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="note" id="vatNote" style="margin-top:0.5rem;"></div>
     </div>
     <div class="form-group" id="vatTurnoverGroup">
-      <label>Estimated gross annual turnover (EUR)</label>
+      <label>Estimated gross annual turnover (EUR)
+        <button type="button" class="info-btn" onclick="toggleTip('tipVatTurnover')">?</button>
+      </label>
       <div class="input-wrap">
         <input type="number" id="vatTurnover" value="" min="0" step="100" placeholder="e.g. 18000" oninput="updateVatNote()">
         <span class="eur">EUR</span>
       </div>
-      <div class="note">Used to assess your Kleinunternehmer eligibility. Does not affect tax/KSK calculations.</div>
-    </div>
-  </div>
-
-  <!-- Commercial income split — only shown for Mixed activity type -->
-  <div id="mixedSplitGroup" class="hidden">
-    <div class="sep"></div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>
-          Commercial income within this activity (EUR/yr)
-          <button type="button" class="info-btn" onclick="toggleTip('tipMixedSplit')">?</button>
-        </label>
-        <div class="input-wrap">
-          <input type="number" id="commercialIncome" value="0" min="0" step="0.01" placeholder="0.00">
-          <span class="eur">EUR</span>
-        </div>
-        <div class="tip-panel" id="tipMixedSplit">
-          <strong>Mixed activity — commercial income</strong><br><br>
-          Enter commercial income that is <strong>not already in the monthly income grid</strong> (Card 2). The grid should contain your qualifying §3 Nr. 26 income only (invoiced to non-profit / public bodies).<br><br>
-          The §3 Nr. 26 Pauschale is applied in full against the grid income. The commercial amount you enter here is added directly on top as fully taxable — it is never offset by the Pauschale.<br><br>
-          <strong>Example:</strong> Grid = €6,216 from a non-profit choir. You also earn €75 from private lessons (commercial). Enter €75 here.<br>
-          Result: (€6,216 − €3,300) + €75 = <strong>€2,991 taxable profit</strong>.
-        </div>
-        <div class="note" id="mixedSplitNote"></div>
-      </div>
+      <div class="tip-panel" id="tipVatTurnover">Used to assess your Kleinunternehmer eligibility. Does not affect tax/KSK calculations.</div>
     </div>
   </div>
 
@@ -932,13 +1193,117 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="form-row">
     <div class="form-group" id="expensesGroup">
-      <label>Additional business expenses (EUR/yr)</label>
+      <label>Additional business expenses (EUR/yr)
+        <button type="button" class="info-btn" onclick="toggleTip('tipExpenses')">?</button>
+      </label>
       <div class="input-wrap">
         <input type="number" id="businessExpenses" value="0" min="0" step="0.01" placeholder="0.00">
         <span class="eur">EUR</span>
       </div>
-      <div class="note">Equipment, software, travel, materials etc. beyond any Pauschale deduction.</div>
+      <div class="tip-panel" id="tipExpenses">Equipment, software, travel, materials etc. beyond any Pauschale deduction.</div>
     </div>
+  </div>
+
+  <!-- Ehrenamtspauschale — shown alongside pauschaleExtras -->
+  <div id="ehrenamtSection" style="display:none;">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Also claiming Ehrenamtspauschale? <span class="legal">§3 Nr. 26a</span>
+          <button type="button" class="info-btn" onclick="toggleTip('tipEhrenamt')">?</button>
+        </label>
+        <select id="ehrenamtToggle" onchange="updatePauschaleEligibility()">
+          <option value="no">No — only §3 Nr. 26 Übungsleiterpauschale</option>
+          <option value="yes">Yes — also claiming §3 Nr. 26a (different role)</option>
+        </select>
+        <div class="tip-panel" id="tipEhrenamt">
+          <strong>Ehrenamtspauschale (§3 Nr. 26a EStG) — <span id="ehrenamtAmt1">960</span> EUR/yr</strong><br><br>
+          A separate allowance of <strong><span id="ehrenamtAmt2">960</span> EUR/year</strong> for honorary/volunteer roles such as:<br>
+          · Board member (Vorstandsmitglied) of a non-profit<br>
+          · Treasurer (Kassenwart) or secretary<br>
+          · Administrative volunteer for a charity or association<br><br>
+          <strong>Stackable with the Übungsleiterpauschale</strong>, but only when the two roles are <em>genuinely separate</em> — different activities, documented in separate contracts. You cannot split one role across both allowances.<br><br>
+          Like the Übungsleiterpauschale, the Ehrenamtspauschale is claimed in your <em>Steuererklärung</em> and requires the organisation to be a non-profit, church, municipality, or public-law body. It reduces your taxable income by an additional <span id="ehrenamtAmt3">960</span> EUR.
+        </div>
+      </div>
+    </div>
+    <!-- Calculator + gross input sit at full card width, outside the form-row column grid -->
+    <div id="ehrenamtGrossGroup" style="display:none;margin-top:0.75rem;">
+          <div id="ehrenamtCalc" style="overflow-x:auto;min-width:0;">
+            <div class="tc-header">
+              <div class="tc-title" style="color:var(--accent2);">🤝 Ehrenamts Income Calculator <span class="legal">§3 Nr. 26a</span></div>
+            </div>
+            <div class="tc-col-headers" style="grid-template-columns:2fr 1.4fr 1.4fr 1.4fr 1.3fr 1.8rem;">
+              <span>Role</span>
+              <span>Rate (€/hr)</span>
+              <span>Hrs / session</span>
+              <span>Frequency</span>
+              <span style="text-align:right;">€/month</span>
+              <span></span>
+            </div>
+            <div id="ehrenamtRows"></div>
+            <div class="tc-footer">
+              <button onclick="addEhrenamtRow()" class="tc-add-btn" style="border-color:rgba(129,199,132,0.4);color:var(--accent2);">
+                <span style="font-size:1rem;line-height:1;">+</span> Add variation
+              </button>
+              <div class="tc-totals">
+                <span class="tc-totals-label">Total/month:</span>
+                <span id="ehrenamtCalcResult" class="tc-totals-val" style="color:var(--accent2);">—</span>
+                <span class="tc-totals-label">Total/year:</span>
+                <span id="ehrenamtCalcYearly" class="tc-totals-val" style="color:var(--accent2);">—</span>
+              </div>
+            </div>
+            <div class="tc-apply-bar">
+              <button onclick="applyEhrenamtCalc()" id="btnApplyEhrenamt" disabled
+                style="background:var(--accent2);color:#000;border:none;border-radius:6px;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;cursor:pointer;opacity:0.4;transition:opacity 0.2s;">
+                Apply to Ehrenamts gross field
+              </button>
+            </div>
+            <div style="margin-top:0.5rem;display:none;" id="ehrenamtCalcNote"></div>
+          </div>
+          <!-- Gross input -->
+          <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+            <div style="font-size:0.82rem;color:var(--muted);">Or enter projected Ehrenamts yearly gross directly:</div>
+            <div class="input-wrap" style="max-width:180px;">
+              <input type="number" id="ehrenamtGross" value="0" min="0" step="0.01" placeholder="0.00" oninput="updatePauschaleEligibility()">
+              <span class="eur">EUR/yr</span>
+            </div>
+        </div>
+        <div class="note" style="margin-top:0.4rem;font-size:0.78rem;" id="ehrenamtGrossNote"></div>
+        <div id="ehrenamtSchedulePanel" style="display:none;margin-top:0.9rem;">
+          <div style="font-size:0.78rem;color:var(--muted);font-weight:600;margin-bottom:0.5rem;">🤝 Ehrenamts work schedule <span style="font-weight:400;font-size:0.73rem;opacity:0.75;">— used to calculate working-day income loss for Ehrenamts</span></div>
+          <div class="work-schedule" id="ehrenamtSchedule">
+            <div class="work-day" id="wdELabel-1" onclick="toggleWorkDayE(1)">
+              <input type="checkbox" id="wdE-1" style="display:none;">
+              Mon
+            </div>
+            <div class="work-day" id="wdELabel-2" onclick="toggleWorkDayE(2)">
+              <input type="checkbox" id="wdE-2" style="display:none;">
+              Tue
+            </div>
+            <div class="work-day" id="wdELabel-3" onclick="toggleWorkDayE(3)">
+              <input type="checkbox" id="wdE-3" style="display:none;">
+              Wed
+            </div>
+            <div class="work-day" id="wdELabel-4" onclick="toggleWorkDayE(4)">
+              <input type="checkbox" id="wdE-4" style="display:none;">
+              Thu
+            </div>
+            <div class="work-day" id="wdELabel-5" onclick="toggleWorkDayE(5)">
+              <input type="checkbox" id="wdE-5" style="display:none;">
+              Fri
+            </div>
+            <div class="work-day" id="wdELabel-6" onclick="toggleWorkDayE(6)">
+              <input type="checkbox" id="wdE-6" style="display:none;">
+              Sat
+            </div>
+            <div class="work-day" id="wdELabel-0" onclick="toggleWorkDayE(0)">
+              <input type="checkbox" id="wdE-0" style="display:none;">
+              Sun
+            </div>
+          </div>
+        </div>
+      </div>
+        <div id="ehrenamtNote" class="note" style="margin-top:0.4rem;display:none;"></div>
   </div>
 </div>
 
@@ -989,11 +1354,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="tc-apply-bar">
       <button onclick="applyToAllMonths()" id="btnApplyAll" disabled style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;cursor:pointer;opacity:0.4;transition:opacity 0.2s;">Apply to all months</button>
       <button onclick="applyToFutureMonths()" id="btnApplyFuture" disabled style="background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.82rem;cursor:pointer;opacity:0.4;transition:opacity 0.2s;">Future months only</button>
+      <button onclick="toggleVacationCalc()" id="btnVacationToggle" style="background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.82rem;cursor:pointer;margin-left:auto;">🏖 Vacation</button>
+      <button onclick="toggleSickCalc()" id="btnSickToggle" style="background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.82rem;cursor:pointer;">🤒 Sick days</button>
     </div>
-  </div>
 
   <!-- ── Manual fill / clear ── -->
-  <div class="fill-bar" style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap;">
+  <div class="fill-bar" style="display:flex;align-items:center;gap:0.6rem;margin-top:1rem;margin-bottom:1rem;flex-wrap:wrap;">
     <span style="font-size:0.78rem;color:var(--muted);">Or fill manually:</span>
     <div class="input-wrap" style="max-width:150px;">
       <input type="number" id="fillAllAmount" min="0" step="0.01" placeholder="EUR/month">
@@ -1003,7 +1369,127 @@ document.addEventListener('DOMContentLoaded', function() {
     <button onclick="clearAllMonths()" style="background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.85rem;cursor:pointer;">Clear</button>
   </div>
   <div class="month-grid" id="monthGrid"></div>
+
+  <!-- ── Shared Work Schedule ── -->
+  <div id="workSchedulePanel" style="display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+    <div style="font-size:0.78rem;color:var(--muted);font-weight:600;margin-bottom:0.5rem;">📅 Your work schedule <span style="font-weight:400;font-size:0.73rem;opacity:0.75;">— used to calculate working-day income loss</span></div>
+    <div class="work-schedule" id="workSchedule">
+      <div class="work-day active" id="wdLabel-1" onclick="toggleWorkDay(1)">
+        <input type="checkbox" id="wd-1" checked style="display:none;">
+        Mon
+      </div>
+      <div class="work-day active" id="wdLabel-2" onclick="toggleWorkDay(2)">
+        <input type="checkbox" id="wd-2" checked style="display:none;">
+        Tue
+      </div>
+      <div class="work-day active" id="wdLabel-3" onclick="toggleWorkDay(3)">
+        <input type="checkbox" id="wd-3" checked style="display:none;">
+        Wed
+      </div>
+      <div class="work-day active" id="wdLabel-4" onclick="toggleWorkDay(4)">
+        <input type="checkbox" id="wd-4" checked style="display:none;">
+        Thu
+      </div>
+      <div class="work-day active" id="wdLabel-5" onclick="toggleWorkDay(5)">
+        <input type="checkbox" id="wd-5" checked style="display:none;">
+        Fri
+      </div>
+      <div class="work-day" id="wdLabel-6" onclick="toggleWorkDay(6)">
+        <input type="checkbox" id="wd-6" style="display:none;">
+        Sat
+      </div>
+      <div class="work-day" id="wdLabel-0" onclick="toggleWorkDay(0)">
+        <input type="checkbox" id="wd-0" style="display:none;">
+        Sun
+      </div>
+    </div>
+  </div>
+
+    <!-- ── Vacation Calculator ── -->
+    <div id="vacationCalc" style="display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+        <div class="tc-title" style="color:var(--warn);">🏖 Vacation / Time-Off Impact</div>
+        <div style="font-size:0.76rem;color:var(--muted);">Counts working days only — weekends and non-work days are free</div>
+      </div>
+
+      <div class="vac-col-headers">
+        <span>Label</span>
+        <span id="vacFromHeader">From</span>
+        <span id="vacToHeader">To</span>
+        <span>Days off</span>
+        <span style="text-align:right;">Income lost</span>
+        <span></span>
+      </div>
+
+      <div id="vacationRows"></div>
+
+      <div class="tc-footer" style="margin-top:0.6rem;">
+        <button onclick="addVacationRow()" class="tc-add-btn" style="border-color:rgba(245,200,66,0.4);color:var(--warn);">
+          <span style="font-size:1rem;line-height:1;">+</span> Add vacation period
+        </button>
+        <div class="tc-totals">
+          <span class="tc-totals-label">Total days off:</span>
+          <span id="vacTotalDays" class="tc-totals-val" style="color:var(--warn);">—</span>
+          <span class="tc-totals-label">Total income lost:</span>
+          <span id="vacTotalLost" class="tc-totals-val" style="color:var(--warn);">—</span>
+        </div>
+      </div>
+
+      <div id="vacMonthBreakdown" style="display:none;margin-top:0.75rem;font-size:0.79rem;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0.65rem 0.85rem;"></div>
+      <div id="vacNextYearWarning" style="display:none;margin-top:0.6rem;font-size:0.78rem;color:var(--warn);border:1px dashed rgba(245,200,66,0.5);border-radius:6px;padding:0.55rem 0.75rem;"></div>
+      <div id="vacCalcSummary" style="display:none;margin-top:0.75rem;padding:0.6rem 0.85rem;border-radius:6px;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.25);font-size:0.82rem;">
+        <span style="color:var(--warn);font-weight:600;">🏖 Vacation impact on calculated income:</span>
+        <span id="vacCalcSummaryText" style="color:var(--muted);margin-left:0.5rem;"></span>
+      </div>
+    </div>
+
+    <!-- ── Sick Day Calculator ── -->
+    <div id="sickCalc" style="display:none;margin-top:1rem;border-top:1px solid rgba(245,83,106,0.3);padding-top:1rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+        <div class="tc-title" style="color:var(--error);">🤒 Sick Day Impact</div>
+        <div style="font-size:0.76rem;color:var(--muted);">Shows income reduction per month during sick periods</div>
+      </div>
+
+      <div class="sick-col-headers">
+        <span>Label</span>
+        <span id="sickFromHeader">From</span>
+        <span id="sickToHeader">To</span>
+        <span>Days sick</span>
+        <span style="text-align:right;">Income lost</span>
+        <span></span>
+      </div>
+
+      <div id="sickRows"></div>
+
+      <div class="tc-footer" style="margin-top:0.6rem;">
+        <button onclick="addSickRow()" class="tc-add-btn" style="border-color:rgba(245,83,106,0.4);color:var(--error);">
+          <span style="font-size:1rem;line-height:1;">+</span> Add illness period
+        </button>
+        <div class="tc-totals">
+          <span class="tc-totals-label">Total days sick:</span>
+          <span id="sickTotalDays" class="tc-totals-val" style="color:var(--error);">—</span>
+          <span class="tc-totals-label">Total income lost:</span>
+          <span id="sickTotalLost" class="tc-totals-val" style="color:var(--error);">—</span>
+        </div>
+      </div>
+
+      <div id="sickMonthBreakdown" style="display:none;margin-top:0.75rem;font-size:0.79rem;color:var(--muted);border:1px solid rgba(245,83,106,0.25);border-radius:6px;padding:0.65rem 0.85rem;"></div>
+      <div id="sickNextYearWarning" style="display:none;margin-top:0.6rem;font-size:0.78rem;color:var(--error);border:1px dashed rgba(245,83,106,0.5);border-radius:6px;padding:0.55rem 0.75rem;"></div>
+      <div id="sickCalcSummary" style="display:none;margin-top:0.75rem;padding:0.6rem 0.85rem;border-radius:6px;background:rgba(245,83,106,0.07);border:1px solid rgba(245,83,106,0.25);font-size:0.82rem;">
+        <span style="color:var(--error);font-weight:600;">🤒 Sick day impact on calculated income:</span>
+        <span id="sickCalcSummaryText" style="color:var(--muted);margin-left:0.5rem;"></span>
+      </div>
+      <!-- Combined makeup suggestion (shown when total days > 12) -->
+      <div id="makeupSuggestion" style="display:none;margin-top:1rem;padding:0.75rem 1rem;border-radius:8px;background:rgba(79,195,247,0.07);border:1px solid rgba(79,195,247,0.25);font-size:0.82rem;">
+        <div style="font-weight:600;color:var(--accent);margin-bottom:0.4rem;">💡 Makeup lesson suggestion</div>
+        <div id="makeupSuggestionText" style="color:var(--muted);line-height:1.6;"></div>
+      </div>
+    </div>
 </div>
+
+<!-- Hidden data stores for vacation/sick monthly loss arrays (replaces button datasets) -->
+<div id="vacLossStore" data-monthly-loss="null" style="display:none;"></div>
+<div id="sickLossStore" data-monthly-loss="null" style="display:none;"></div>
 
 <!-- ═══════════════════════════════════════════════════════
      CARD 3 · INCOME TAX ESTIMATOR
@@ -1179,15 +1665,24 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="sep"></div>
 
   <!-- Insurance section -->
-  <div class="form-row thirds">
+  <div class="form-row">
     <div class="form-group">
       <label>Health Insurance (Krankenversicherung)</label>
-      <select id="healthInsType">
+      <select id="healthInsType" onchange="onHealthInsChange()">
         <option value="gkv" selected>Statutory (GKV – pflichtversichert)</option>
         <option value="gkv_vol">Statutory (GKV – freiwillig)</option>
         <option value="pkv">Private (PKV)</option>
       </select>
     </div>
+    <div class="form-group hidden" id="pkvGroup">
+      <label>PKV monthly premium (EUR)</label>
+      <div class="input-wrap">
+        <input type="number" id="pkvPremium" value="0" min="0" step="1">
+        <span class="eur">EUR</span>
+      </div>
+    </div>
+  </div>
+  <div class="form-row" id="gkvRow">
     <div class="form-group" id="zusatzGroup">
       <label>Krankenkasse <small style="color:var(--muted)">(sets Zusatzbeitrag)</small></label>
       <select id="kasseSelect" onchange="onKasseChange()">
@@ -1196,17 +1691,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="form-group" id="zusatzGroup2">
       <label>GKV Zusatzbeitrag (%)</label>
       <div class="input-wrap">
-        <input type="number" id="zusatzbeitrag" value="2.9" min="0" max="5" step="0.01">
+        <input type="text" inputmode="decimal" id="zusatzbeitrag" value="2.90">
         <span class="eur">%</span>
       </div>
       <div id="zusatzNote" style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">⌀ Durchschnitt 2026 · gesetzt vom GKV-Spitzenverband</div>
-    </div>
-    <div class="form-group hidden" id="pkvGroup">
-      <label>PKV monthly premium (EUR)</label>
-      <div class="input-wrap">
-        <input type="number" id="pkvPremium" value="0" min="0" step="1">
-        <span class="eur">EUR</span>
-      </div>
     </div>
   </div>
 
@@ -1294,6 +1782,10 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="lbl">↳ Commercial income <small>(not §3 Nr. 26 exempt)</small></span>
           <span class="val" id="ntCommercial">–</span>
         </div>
+        <div class="row" id="ntEhrenamtGrossRow" style="display:none;padding-left:1rem;font-size:0.82rem;color:var(--muted);">
+          <span class="lbl">↳ Ehrenamts income <small>(§3 Nr. 26a)</small></span>
+          <span class="val" id="ntEhrenamtGross">–</span>
+        </div>
         <div class="row" style="border-left:3px solid var(--accent);padding-left:0.5rem;">
           <span class="lbl">
             Taxable freelance profit
@@ -1341,6 +1833,32 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
             <span class="val" id="ntKgAddback" style="color:var(--muted);">–</span>
           </div>
+          <div class="row" id="ntVacToggleRow" style="display:none;">
+            <span class="lbl">
+              <button type="button" id="ntVacToggleBtn" onclick="toggleAddback('vac')"
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--warn);background:var(--warn);color:#000;cursor:pointer;margin-right:0.4rem;">Remove</button>
+              🏖 Vacation income loss
+              <span id="ntVacMakeupWrap" style="display:inline-block;position:relative;margin-left:0.35rem;vertical-align:middle;">
+                <button type="button" class="makeup-tip-btn warn-tip-btn"
+                  onclick="toggleMakeupTip('ntVacMakeupTip',event)">?</button>
+                <div id="ntVacMakeupTip" class="makeup-tip warn-tip" role="tooltip"></div>
+              </span>
+            </span>
+            <span class="val" id="ntVacLoss" style="color:var(--warn);">–</span>
+          </div>
+          <div class="row" id="ntSickToggleRow" style="display:none;">
+            <span class="lbl">
+              <button type="button" id="ntSickToggleBtn" onclick="toggleAddback('sick')"
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--error);background:var(--error);color:#fff;cursor:pointer;margin-right:0.4rem;">Remove</button>
+              🤒 Sick day income loss
+              <span id="ntSickMakeupWrap" style="display:inline-block;position:relative;margin-left:0.35rem;vertical-align:middle;">
+                <button type="button" class="makeup-tip-btn error-tip-btn"
+                  onclick="toggleMakeupTip('ntSickMakeupTip',event)">?</button>
+                <div id="ntSickMakeupTip" class="makeup-tip error-tip" role="tooltip"></div>
+              </span>
+            </span>
+            <span class="val" id="ntSickLoss" style="color:var(--error);">–</span>
+          </div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;justify-content:center;padding-left:1rem;">
@@ -1379,6 +1897,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="row"><span class="lbl">Total gross income</span><span class="val" id="rGross">–</span></div>
       <div class="row deduct"><span class="lbl">Übungsleiterpauschale (deducted)</span><span class="val" id="rPauschale">–</span></div>
       <div class="row deduct" id="rEhrenamtRow" style="display:none;padding-left:1rem;font-size:0.82rem;"><span class="lbl">↳ Ehrenamtspauschale (§3 Nr. 26a)</span><span class="val" id="rEhrenamt">–</span></div>
+      <div class="row" id="rEhrenamtGrossRow" style="display:none;padding-left:1rem;font-size:0.82rem;color:var(--muted);"><span class="lbl">↳ Ehrenamts gross income</span><span class="val" id="rEhrenamtGross">–</span></div>
       <div class="row" id="rCommercialRow" style="display:none;border-left:3px solid var(--warn);padding-left:0.5rem;"><span class="lbl">Commercial income (not §3 Nr. 26 exempt)</span><span class="val" id="rCommercial">–</span></div>
       <div class="row deduct"><span class="lbl">Business expenses</span><span class="val" id="rExpenses">–</span></div>
       <div class="row total"><span class="lbl">Taxable profit</span><span class="val" id="rProfit">–</span></div>
@@ -1425,6 +1944,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 // ──────────────────────────────────────────────────────────
+// SETTINGS STATE — declared first so eur() can read it
+// ──────────────────────────────────────────────────────────
+const _settings = {
+  theme:  (typeof localStorage !== 'undefined' && localStorage.getItem('ksk_theme'))  || 'system',
+  format: (typeof localStorage !== 'undefined' && localStorage.getItem('ksk_format')) || 'de',
+};
+
+// ──────────────────────────────────────────────────────────
 // DATA TABLES
 // ──────────────────────────────────────────────────────────
 const YEAR_DATA = {
@@ -1445,8 +1972,32 @@ const MONTHS = ["January","February","March","April","May","June",
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 function yd(year) { return YEAR_DATA[year] || YEAR_DATA[2026]; }
-function eur(n) { return n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR'; }
-function pct(n) { return (n*100).toFixed(2) + '%'; }
+function eur(n) {
+  if (_settings?.format === 'us') {
+    return Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR';
+  }
+  return Number(n).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR';
+}
+function fmtNum(n, decimals=0) {
+  if (_settings?.format === 'us') return Number(n).toLocaleString('en-US', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+  return Number(n).toLocaleString('de-DE', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+function fmtDate(isoStr) {
+  if (!isoStr) return '';
+  const [y,m,d] = isoStr.split('-');
+  if (!y || !m || !d) return isoStr;
+  return _settings?.format === 'us' ? `${m}/${d}/${y}` : `${d}.${m}.${y}`;
+}
+// pct: formats a ratio as a percentage string, locale-aware decimal separator
+function pct(n) {
+  const val = (n * 100).toFixed(2);
+  return (_settings?.format === 'us' ? val : val.replace('.', ',')) + '%';
+}
+// fmtPct: formats a pre-scaled percentage (e.g. 9.3 → "9,3%") locale-aware
+function fmtPct(scaled, decimals = 1) {
+  const val = Number(scaled).toFixed(decimals);
+  return (_settings?.format === 'us' ? val : val.replace('.', ',')) + '%';
+}
 
 // ──────────────────────────────────────────────────────────
 // CHURCH TAX RATES BY STATE
@@ -1735,23 +2286,31 @@ function onKasseChange() {
   const input = document.getElementById('zusatzbeitrag');
   const note  = document.getElementById('zusatzNote');
   const year  = parseInt(document.getElementById('year').value) || 2026;
-  const avgPct = ((AVG_ZUSATZ_BY_YEAR[year] || 0.029) * 100).toFixed(2);
+  const avgRaw = (AVG_ZUSATZ_BY_YEAR[year] || 0.029) * 100;
+  const avgPctDot = avgRaw.toFixed(2); // always dot — used as option value
+
+  // Format display value using locale decimal separator
+  function fmtInputPct(numericPct) {
+    const s = numericPct.toFixed(2);
+    return _settings?.format === 'us' ? s : s.replace('.', ',');
+  }
 
   if (val === 'avg') {
-    input.value = avgPct;
-    note.textContent = `⌀ Durchschnitt ${year} · gesetzt vom GKV-Spitzenverband`;
+    input.value = fmtInputPct(avgRaw);
+    note.textContent = `⌀ Durchschnitt ${year}: ${fmtPct(avgRaw, 2)} · gesetzt vom GKV-Spitzenverband`;
     input.readOnly = true;
     input.style.opacity = '0.6';
   } else if (val === 'custom') {
+    // Leave value as-is; just unlock
     input.readOnly = false;
     input.style.opacity = '1';
     note.textContent = 'Bitte Zusatzbeitrag deiner Kasse manuell eingeben.';
     input.focus();
   } else {
-    input.value = parseFloat(val).toFixed(2);
+    input.value = fmtInputPct(parseFloat(val));
     const optText = sel.options[sel.selectedIndex]?.text || '';
     const kasseName = optText.replace(/\s*\(.*/, '').replace(' ← günstigste', '');
-    note.textContent = `Zusatzbeitrag ${year}: ${val}% (${kasseName})`;
+    note.textContent = `Zusatzbeitrag ${year}: ${fmtPct(parseFloat(val), 2)} (${kasseName})`;
     input.readOnly = true;
     input.style.opacity = '0.6';
   }
@@ -1763,6 +2322,8 @@ function onHealthInsChange() {
   document.getElementById('zusatzGroup').classList.toggle('hidden', isPKV);
   document.getElementById('zusatzGroup2').classList.toggle('hidden', isPKV);
   document.getElementById('pkvGroup').classList.toggle('hidden', !isPKV);
+  const gkvRow = document.getElementById('gkvRow');
+  if (gkvRow) gkvRow.style.display = isPKV ? 'none' : '';
 }
 
 function buildMonthGrid() {
@@ -1875,13 +2436,13 @@ function buildKasseSelect(year) {
   sel.innerHTML = '';
 
   const avg = (AVG_ZUSATZ_BY_YEAR[year] || 0.029);
-  const avgPct = (avg * 100).toFixed(2);
+  const avgPct = (avg * 100).toFixed(2); // raw decimal kept as option value
 
   // avg option
   const avgOpt = document.createElement('option');
   avgOpt.value = 'avg';
   avgOpt.id = 'kasseAvgOption';
-  avgOpt.textContent = `⌀ Durchschnitt ${year} (${avgPct}%)`;
+  avgOpt.textContent = `⌀ Durchschnitt ${year} (${fmtPct(avg * 100, 2)})`;
   sel.appendChild(avgOpt);
 
   // Group options
@@ -1893,9 +2454,9 @@ function buildKasseSelect(year) {
       const rate = k.rates[year];
       if (rate == null) return; // kasse didn't exist that year
       const opt = document.createElement('option');
-      const pct = rate.toFixed(2);
+      const pct = rate.toFixed(2); // raw decimal kept as option value
       opt.value = pct;
-      opt.textContent = `${k.name} (${pct}%)`;
+      opt.textContent = `${k.name} (${fmtPct(rate, 2)})`;
       og.appendChild(opt);
     });
     if (og.children.length > 0) sel.appendChild(og);
@@ -1916,6 +2477,30 @@ function buildKasseSelect(year) {
   if (!restored) sel.value = 'avg';
 
   // Refresh note and value
+  onKasseChange();
+}
+
+// Re-labels all kasse options in-place when format changes (no full rebuild needed)
+function reformatKasseSelect() {
+  const sel  = document.getElementById('kasseSelect');
+  const year = parseInt(document.getElementById('year').value) || 2026;
+  const avg  = AVG_ZUSATZ_BY_YEAR[year] || 0.029;
+
+  Array.from(sel.options).forEach(opt => {
+    if (opt.value === 'avg') {
+      opt.textContent = `⌀ Durchschnitt ${year} (${fmtPct(avg * 100, 2)})`;
+    } else if (opt.value !== 'custom') {
+      const rate = parseFloat(opt.value); // already a percent like 1.60
+      // Extract name without the old formatted pct suffix
+      const name = opt.textContent.replace(/\s*\(.*\)\s*$/, '');
+      opt.textContent = `${name} (${fmtPct(rate, 2)})`;
+    }
+  });
+  // Force browser to repaint the select by toggling value briefly
+  const cur = sel.value;
+  sel.value = '';
+  sel.value = cur;
+  // Rewrite note text too
   onKasseChange();
 }
 
@@ -1955,7 +2540,7 @@ function updateYearFigures() {
   document.title = `KSK Calculator ${year}`;
 
   // Pauschale spans in activityNote and vereinsCapWarning
-  const pFmt = d.pauschale.toLocaleString('de-DE');
+  const pFmt = fmtNum(d.pauschale);
   document.getElementById('pauschaleNote').textContent = pFmt;
   ['vereinsPauschaleAmt','vereinsPauschaleAmt2','vereinsPauschaleAmt3'].forEach(id => {
     const el = document.getElementById(id);
@@ -1978,7 +2563,7 @@ function updateYearFigures() {
   const bbgsKvYearEl = document.getElementById('bbgsKvYear');
   const bbgsKvCapEl  = document.getElementById('bbgsKvCap');
   if (bbgsKvYearEl) bbgsKvYearEl.textContent = year;
-  if (bbgsKvCapEl)  bbgsKvCapEl.textContent  = d.bbgsKV.toLocaleString('de-DE');
+  if (bbgsKvCapEl)  bbgsKvCapEl.textContent  = fmtNum(d.bbgsKV);
 
   // If results are showing, re-run calculate to refresh all numbers
   if (document.getElementById('kskResults').classList.contains('show')) {
@@ -1990,7 +2575,7 @@ function updateYearFigures() {
 function updatePauschaleNote() {
   const year = parseInt(document.getElementById('year').value);
   const d = yd(year);
-  document.getElementById('pauschaleNote').textContent = d.pauschale.toLocaleString('de-DE');
+  document.getElementById('pauschaleNote').textContent = fmtNum(d.pauschale);
 }
 
 function updatePauschaleEligibility() {
@@ -1999,7 +2584,7 @@ function updatePauschaleEligibility() {
   const resultEl = document.getElementById('pauschaleResult');
   const hiddenEl = document.getElementById('pauschaleEligible');
   const year     = parseInt(document.getElementById('year').value);
-  const pauschale = yd(year).pauschale.toLocaleString('de-DE');
+  const pauschale = yd(year).pauschale; // raw number — formatted at each output site via fmtNum()
 
   const qualifyingActivity = activity === 'qualified' || activity === 'mixed';
   const qualifyingHours    = hours === 'under14';
@@ -2013,6 +2598,7 @@ function updatePauschaleEligibility() {
 
   // Show/hide extras section (Anlage, Ehrenamtspauschale, admin mix, contract checklist)
   document.getElementById('pauschaleExtras').style.display = eligible ? '' : 'none';
+  document.getElementById('ehrenamtSection').style.display = eligible ? '' : 'none';
   document.getElementById('contractChecklist').style.display = eligible ? '' : 'none';
   document.getElementById('vereinsCapWarning').style.display = eligible ? '' : 'none';
 
@@ -2042,11 +2628,28 @@ function updatePauschaleEligibility() {
     const contractEhRow = document.getElementById('contractEhrenamtRow');
     if (ehrenamtVal === 'yes') {
       const ehrenamtAmt = EHRENAMT_BY_YEAR[year] || 960;
+      document.getElementById('ehrenamtGrossGroup').style.display = '';
+      // Live note under the gross input
+      const grossVal = parseFloat(document.getElementById('ehrenamtGross')?.value) || 0;
+      const effectiveDeduct = Math.min(ehrenamtAmt, grossVal);
+      const grossNote = document.getElementById('ehrenamtGrossNote');
+      if (grossNote) {
+        if (grossVal === 0) {
+          grossNote.textContent = `Enter your projected Ehrenamts earnings — up to ${fmtNum(ehrenamtAmt)} EUR will be tax-free.`;
+        } else if (grossVal < ehrenamtAmt) {
+          grossNote.textContent = `✓ Full ${eur(grossVal)} is tax-free (below the ${fmtNum(ehrenamtAmt)} EUR Pauschale).`;
+        } else {
+          grossNote.textContent = `✓ ${eur(ehrenamtAmt)} tax-free; ${eur(grossVal - ehrenamtAmt)} above the Pauschale is taxable.`;
+        }
+      }
       ehrenamtNote.style.display = '';
-      ehrenamtNote.innerHTML = `✓ <strong>${ehrenamtAmt} EUR/yr additional tax-free allowance (§3 Nr. 26a)</strong> will be deducted from your taxable income — stackable on top of the ${pauschale} EUR Übungsleiterpauschale. Ensure the roles are genuinely separate and documented in a separate contract.`;
+      ehrenamtNote.innerHTML = `✓ <strong>${fmtNum(ehrenamtAmt)} EUR/yr additional tax-free allowance (§3 Nr. 26a)</strong> will be deducted from your taxable income — stackable on top of the ${fmtNum(pauschale)} EUR Übungsleiterpauschale. Ensure the roles are genuinely separate and documented in a separate contract.`;
       if (contractEhRow) contractEhRow.style.display = 'flex';
     } else {
       ehrenamtNote.style.display = 'none';
+      document.getElementById('ehrenamtGrossGroup').style.display = 'none';
+      const egInput = document.getElementById('ehrenamtGross');
+      if (egInput) egInput.value = '0';
       if (contractEhRow) contractEhRow.style.display = 'none';
     }
   }
@@ -2061,7 +2664,7 @@ function updatePauschaleEligibility() {
     const commercialVal = parseFloat(document.getElementById('commercialIncome').value) || 0;
     const noteEl = document.getElementById('mixedSplitNote');
     noteEl.innerHTML = commercialVal > 0
-      ? `Commercial share: <strong>${commercialVal.toLocaleString('de-DE', {minimumFractionDigits:2})} EUR</strong> — taxed in full, no Pauschale offset. Qualifying portion receives the §3 Nr. 26 deduction (up to ${pauschale} EUR).`
+      ? `Commercial share: <strong>${eur(commercialVal)}</strong> — taxed in full, no Pauschale offset. Qualifying portion receives the §3 Nr. 26 deduction (up to ${fmtNum(pauschale)} EUR).`
       : `Enter the EUR amount of your gross income (from the monthly grid) that comes from commercial clients. Leave 0 if uncertain — you can adjust later.`;
   }
 
@@ -2083,7 +2686,7 @@ function updatePauschaleEligibility() {
     resultEl.innerHTML = `<strong style="color:var(--warn)">Partial eligibility.</strong> Enter the commercial portion of your income in the field below. The calculator will apply the §3 Nr. 26 Pauschale only against the qualifying share and treat the commercial share as fully taxable income.${anlageGuide}`;
   } else {
     resultEl.style.cssText = 'border-left:3px solid var(--success);padding-left:0.75rem;color:var(--muted)';
-    resultEl.innerHTML = `<strong style="color:var(--success)">§3 Nr. 26 applies.</strong> Up to <strong>${pauschale} EUR/yr</strong> of your income is tax-free — claimed in your <em>Steuererklärung</em>.${anlageGuide} Note: you do <em>not</em> need another job to qualify; the sole criterion is the 14 hrs/week time limit.`;
+    resultEl.innerHTML = `<strong style="color:var(--success)">§3 Nr. 26 applies.</strong> Up to <strong>${fmtNum(pauschale)} EUR/yr</strong> of your income is tax-free — claimed in your <em>Steuererklärung</em>.${anlageGuide} Note: you do <em>not</em> need another job to qualify; the sole criterion is the 14 hrs/week time limit.`;
   }
 
   updatePauschaleNote();
@@ -2122,29 +2725,67 @@ function updateKindergeldAuto() {
 }
 
 // ── Addback toggle state ─────────────────────────────────
-const _addback = { spouse: true, kg: true };
+const _addback = { spouse: true, kg: true, vac: false, sick: false };
 
 function resetAddbackButtons() {
+  const configs = {
+    ntSpouseToggleBtn: { color: 'var(--accent)', text: '#fff' },
+    ntKgToggleBtn:     { color: 'var(--accent)', text: '#fff' },
+    ntVacToggleBtn:    { color: 'var(--warn)',    text: '#000' },
+    ntSickToggleBtn:   { color: 'var(--error)',   text: '#fff' },
+  };
+  // Spouse and Kg default to included (Remove), vac/sick default to excluded (Include)
   ['ntSpouseToggleBtn','ntKgToggleBtn'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
-    btn.textContent        = 'Remove';
-    btn.style.background   = 'var(--accent)';
-    btn.style.color        = '#fff';
-    btn.style.borderColor  = 'var(--accent)';
+    const cfg = configs[id];
+    btn.textContent       = 'Remove';
+    btn.style.background  = cfg.color;
+    btn.style.color       = cfg.text;
+    btn.style.borderColor = cfg.color;
+  });
+  ['ntVacToggleBtn','ntSickToggleBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.textContent       = 'Include';
+    btn.style.background  = 'var(--card)';
+    btn.style.color       = 'var(--muted)';
+    btn.style.borderColor = 'var(--border)';
   });
   _addback.spouse = true;
   _addback.kg     = true;
+  _addback.vac    = false;
+  _addback.sick   = false;
 }
+
+function toggleMakeupTip(id, event) {
+  event?.stopPropagation();
+  const tip = document.getElementById(id);
+  if (!tip) return;
+  const isVisible = tip.classList.contains('visible');
+  // Close all open tips first
+  document.querySelectorAll('.makeup-tip.visible').forEach(t => t.classList.remove('visible'));
+  if (!isVisible) tip.classList.add('visible');
+}
+// Close makeup tips on outside click
+document.addEventListener('click', () => {
+  document.querySelectorAll('.makeup-tip.visible').forEach(t => t.classList.remove('visible'));
+});
 
 function toggleAddback(type) {
   _addback[type] = !_addback[type];
-  const btn = document.getElementById(type === 'spouse' ? 'ntSpouseToggleBtn' : 'ntKgToggleBtn');
-  btn.textContent   = _addback[type] ? 'Remove' : 'Include';
-  btn.style.background  = _addback[type] ? 'var(--accent)' : 'var(--card)';
-  btn.style.color       = _addback[type] ? '#fff' : 'var(--muted)';
-  btn.style.borderColor = _addback[type] ? 'var(--accent)' : 'var(--border)';
+  const idMap   = { spouse:'ntSpouseToggleBtn', kg:'ntKgToggleBtn', vac:'ntVacToggleBtn', sick:'ntSickToggleBtn' };
+  const colorMap = { spouse:'var(--accent)', kg:'var(--accent)', vac:'var(--warn)', sick:'var(--error)' };
+  const textMap  = { spouse:'#fff', kg:'#fff', vac:'#000', sick:'#fff' };
+  const btn = document.getElementById(idMap[type]);
+  if (!btn) return;
+  const on = _addback[type];
+  btn.textContent       = on ? 'Remove' : 'Include';
+  btn.style.background  = on ? colorMap[type] : 'var(--card)';
+  btn.style.color       = on ? textMap[type]  : 'var(--muted)';
+  btn.style.borderColor = on ? colorMap[type] : 'var(--border)';
   renderSummary();
+  renderHeadroomsWithAdjustments();
 }
 
 let _chosenAssessment = 'separate'; // 'separate' or 'joint'
@@ -2179,10 +2820,18 @@ function renderSummary() {
   const f = v => eur(v / div);
 
   document.getElementById('ntGross').textContent = f(_cs.totalIncome);
-  document.getElementById('ntQualifyingRow').style.display = _cs.commercialIncome > 0 ? 'flex' : 'none';
+  document.getElementById('ntQualifyingRow').style.display =
+    (_cs.commercialIncome > 0 || _cs.ehrenamtGross > 0) ? 'flex' : 'none';
   document.getElementById('ntQualifying').textContent = f(_cs.totalGross);
   if (document.getElementById('ntCommercialRow').style.display !== 'none') {
     document.getElementById('ntCommercial').textContent = f(_cs.commercialIncome);
+  }
+  const egRow = document.getElementById('ntEhrenamtGrossRow');
+  if (_cs.ehrenamtActive && _cs.ehrenamtGross > 0) {
+    egRow.style.display = 'flex';
+    document.getElementById('ntEhrenamtGross').textContent = f(_cs.ehrenamtGross);
+  } else {
+    egRow.style.display = 'none';
   }
   document.getElementById('ntTaxableProfit').textContent = f(_cs.taxableProfit);
   if (document.getElementById('ntYourRawIncomeRow').style.display !== 'none') {
@@ -2199,9 +2848,9 @@ function renderSummary() {
 
   const estLabel = _chosenAssessment === 'joint' ? 'Ehegattensplitting (joint)' : 'getrennte Veranlagung (separate)';
   document.getElementById('ntEStLabel').textContent = estLabel;
-  document.getElementById('ntESt').textContent = chosenEStNow > 0 ? ('- ' + f(chosenEStNow)) : '0 EUR (below Grundfreibetrag)';
-  document.getElementById('ntSoli2').textContent = chosenSoliNow > 0 ? ('- ' + f(chosenSoliNow)) : '0 EUR';
-  document.getElementById('ntChurch').textContent = _cs.churchRate > 0 ? ('- ' + f(churchNow)) : '0 EUR (none)';
+  document.getElementById('ntESt').textContent = chosenEStNow > 0 ? ('- ' + f(chosenEStNow)) : eur(0) + ' (below Grundfreibetrag)';
+  document.getElementById('ntSoli2').textContent = chosenSoliNow > 0 ? ('- ' + f(chosenSoliNow)) : eur(0);
+  document.getElementById('ntChurch').textContent = _cs.churchRate > 0 ? ('- ' + f(churchNow)) : eur(0) + ' (none)';
   document.getElementById('ntTotalDeduct').textContent = f(totalDeductNow);
   document.getElementById('ntEffRate').textContent = pct(effRateNow);
   // Freelance-only take-home shown before addbacks — ÷div (per active month) for freelance rows
@@ -2215,6 +2864,35 @@ function renderSummary() {
   document.getElementById('ntAddbackSection').style.display = showAddback ? '' : 'none';
   document.getElementById('ntSpouseToggleRow').style.display = isMarried ? 'flex' : 'none';
   document.getElementById('ntKgToggleRow').style.display     = hasKg     ? 'flex' : 'none';
+
+  // Vacation / sick loss rows — show only if that calculator has computed losses
+  const hasVacLoss  = (_cs.vacationLossYearly || 0) > 0;
+  const hasSickLoss = (_cs.sickLossYearly    || 0) > 0;
+  document.getElementById('ntVacToggleRow').style.display  = hasVacLoss  ? 'flex' : 'none';
+  document.getElementById('ntSickToggleRow').style.display = hasSickLoss ? 'flex' : 'none';
+  if (hasVacLoss || hasSickLoss) {
+    document.getElementById('ntAddbackSection').style.display = '';
+  }
+  if (hasVacLoss) {
+    document.getElementById('ntVacLoss').textContent = m
+      ? `- ${eur(_cs.vacationLossYearly / div)}/mo` : `- ${eur(_cs.vacationLossYearly)}/yr`;
+    const { workDayRate } = gridDailyRate();
+    const tipEl = document.getElementById('ntVacMakeupTip');
+    if (tipEl && workDayRate > 0) {
+      const makeupDays = Math.ceil(_cs.vacationLossYearly / workDayRate);
+      tipEl.textContent = `↩ To recover: ~${makeupDays} extra working day${makeupDays !== 1 ? 's' : ''} of makeup sessions`;
+    }
+  }
+  if (hasSickLoss) {
+    document.getElementById('ntSickLoss').textContent = m
+      ? `- ${eur(_cs.sickLossYearly / div)}/mo` : `- ${eur(_cs.sickLossYearly)}/yr`;
+    const { workDayRate } = gridDailyRate();
+    const tipEl = document.getElementById('ntSickMakeupTip');
+    if (tipEl && workDayRate > 0) {
+      const makeupDays = Math.ceil(_cs.sickLossYearly / workDayRate);
+      tipEl.textContent = `↩ To recover: ~${makeupDays} extra working day${makeupDays !== 1 ? 's' : ''} of makeup sessions`;
+    }
+  }
 
   // Spouse net income — Lohnsteuer (by Steuerklasse) + Soli + church + social insurance.
   // Social insurance (KV, PV, RV, AV employee shares) apply regardless of KSK status.
@@ -2261,14 +2939,22 @@ function renderSummary() {
   // Yearly:   freelanceNetYearly        +  spouseNetYearly        +  kgYearly
   const spouseAddback = _addback.spouse ? spouseNetYearly : 0;
   const kgAddback     = _addback.kg     ? (_cs.kgYearly || 0) : 0;
+  const vacDeduct     = _addback.vac    ? (_cs.vacationLossYearly || 0) : 0;
+  const sickDeduct    = _addback.sick   ? (_cs.sickLossYearly    || 0) : 0;
 
   let totalShown;
   if (m) {
     totalShown = Math.max(0, netYearlyNow / div)
                + spouseAddback / 12
-               + kgAddback / 12;
+               + kgAddback / 12
+               - vacDeduct / div
+               - sickDeduct / div;
   } else {
-    totalShown = Math.max(0, netYearlyNow) + spouseAddback + kgAddback;
+    totalShown = Math.max(0, netYearlyNow)
+               + spouseAddback
+               + kgAddback
+               - vacDeduct
+               - sickDeduct;
   }
   document.getElementById('ntTakeHome').textContent = eur(totalShown);
   document.getElementById('ntTakeHomeLabel').textContent = m ? 'Monthly take-home' : 'Yearly take-home';
@@ -2280,7 +2966,7 @@ function renderSummary() {
     document.getElementById('ntPV').textContent = '- ' + f(_cs.yearlyPV);
     document.getElementById('ntAV').textContent = '- ' + f(_cs.yearlyAV || 0);
   }
-  renderTaxHeadroom();
+  renderHeadroomsWithAdjustments();
 }
 
 function renderTaxHeadroom() {
@@ -2383,6 +3069,67 @@ function renderTaxHeadroom() {
 }
 
 
+function renderHeadroomsWithAdjustments() {
+  if (!_cs) return;
+  // When vac/sick are included, they reduce effective income and taxable profit.
+  // We temporarily patch _cs so renderTaxHeadroom and KSK headroom see adjusted values.
+  const vacAdj  = _addback.vac  ? (_cs.vacationLossYearly || 0) : 0;
+  const sickAdj = _addback.sick ? (_cs.sickLossYearly    || 0) : 0;
+  const totalAdj = vacAdj + sickAdj;
+
+  if (totalAdj === 0) {
+    renderTaxHeadroom();
+    renderKSKHeadroom();
+    return;
+  }
+
+  // Patch _cs temporarily
+  const origTaxableProfit = _cs.taxableProfit;
+  const origYourRawIncome = _cs.yourRawIncome;
+  const origJointIncome   = _cs.jointIncome;
+  const origTotalIncome   = _cs.totalIncome;
+
+  _cs.taxableProfit = Math.max(0, _cs.taxableProfit - totalAdj);
+  _cs.yourRawIncome = Math.max(0, _cs.yourRawIncome - totalAdj);
+  _cs.jointIncome   = Math.max(0, _cs.jointIncome   - totalAdj);
+  _cs.totalIncome   = Math.max(0, _cs.totalIncome   - totalAdj);
+
+  renderTaxHeadroom();
+  renderKSKHeadroom();
+
+  // Restore
+  _cs.taxableProfit = origTaxableProfit;
+  _cs.yourRawIncome = origYourRawIncome;
+  _cs.jointIncome   = origJointIncome;
+  _cs.totalIncome   = origTotalIncome;
+}
+
+function renderKSKHeadroom() {
+  if (!_cs) return;
+  const headroomBox = document.getElementById('headroomBox');
+  if (!headroomBox) return;
+  const { taxableProfit, proRatedLimit, eligibleMonths, year } = _cs;
+  const kskNow = taxableProfit >= proRatedLimit;
+  if (!kskNow) {
+    const taxableHeadroom = proRatedLimit - taxableProfit;
+    const monthlyTaxableHeadroom = taxableHeadroom / eligibleMonths;
+    headroomBox.style.display = 'block';
+    headroomBox.className = taxableHeadroom < proRatedLimit * 0.25 ? 'headroom-box warn' : 'headroom-box';
+    headroomBox.innerHTML = `
+      <div class="headroom-amount">${eur(monthlyTaxableHeadroom)}/mo</div>
+      <div class="headroom-desc">
+        <strong>Additional monthly profit before KSK is required</strong><br>
+        You can earn ~${eur(monthlyTaxableHeadroom)} more per month in taxable profit (avg. over ${eligibleMonths} months)
+        before crossing the KSK threshold of ${eur(proRatedLimit)} total for ${year}.
+        That's ${eur(taxableHeadroom)} remaining taxable headroom this year.
+      </div>`;
+  } else {
+    headroomBox.style.display = 'none';
+  }
+}
+
+let _suppressResultScroll = false;
+
 function calculate() {
   resetAddbackButtons();
   const year = parseInt(document.getElementById('year').value);
@@ -2410,7 +3157,7 @@ function calculate() {
   const childrenVal = parseFloat(document.getElementById('children').value) || 0;
   const children = Math.floor(childrenVal); // integer for PV calc
   const healthInsType = document.getElementById('healthInsType').value;
-  const zusatz = healthInsType !== 'pkv' ? (parseFloat(document.getElementById('zusatzbeitrag').value) || 2.9) / 100 : 0;
+  const zusatz = healthInsType !== 'pkv' ? (parseFloat((document.getElementById('zusatzbeitrag').value || '').replace(',', '.')) || 2.9) / 100 : 0;
   const pkvPremiumMonthly = healthInsType === 'pkv' ? (parseFloat(document.getElementById('pkvPremium').value) || 0) : 0;
   const rvType = document.getElementById('rvType').value;
   const avType = document.getElementById('avType').value;
@@ -2451,12 +3198,21 @@ function calculate() {
   const pauschaleDeduct   = pauschaleEligible ? Math.min(d.pauschale, qualifyingGross) : 0;
   const ehrenamtActive    = pauschaleEligible &&
     (document.getElementById('ehrenamtToggle')?.value === 'yes');
-  const ehrenamtDeduct    = ehrenamtActive ? (EHRENAMT_BY_YEAR[year] || 960) : 0;
-  const totalExempt       = pauschaleDeduct + ehrenamtDeduct;
+  const ehrenamtGross     = ehrenamtActive
+    ? (parseFloat(document.getElementById('ehrenamtGross')?.value) || 0) : 0;
+  // Deduction capped to actual earnings from the role (can't deduct more than earned)
+  const ehrenamtDeduct    = ehrenamtActive ? Math.min(EHRENAMT_BY_YEAR[year] || 960, ehrenamtGross) : 0;
+  // Taxable surplus above the Ehrenamtspauschale (treated like commercialIncome —
+  // a separate stream not in the monthly grid, added directly to the taxable base).
+  const ehrenamtTaxable   = Math.max(0, ehrenamtGross - ehrenamtDeduct);
+  // IMPORTANT: ehrenamtDeduct only offsets ehrenamtGross, NOT qualifyingGross.
+  // totalExempt must only contain pauschaleDeduct so it is correctly subtracted
+  // from qualifyingGross alone. ehrenamtDeduct is already handled via ehrenamtTaxable.
+  const totalExempt       = pauschaleDeduct;
   const effectiveExpenses = pauschaleEligible
     ? Math.max(0, businessExpenses - pauschaleDeduct)
     : businessExpenses;
-  const taxableProfit     = Math.max(0, qualifyingGross - totalExempt + commercialIncome - effectiveExpenses);
+  const taxableProfit     = Math.max(0, qualifyingGross - totalExempt + commercialIncome + ehrenamtTaxable - effectiveExpenses);
   const proRatedLimit = 325 * eligibleMonths;
   const avgMonthlyProfit = eligibleMonths > 0 ? taxableProfit / eligibleMonths : 0;
 
@@ -2636,7 +3392,7 @@ function calculate() {
 
   // ── Full Netto (freelance income only; spouse & Kindergeld are addbacks) ──
   const totalDeductions = kskYearlyDeduct + chosenESt + chosenSoli + churchTaxYearly;
-  const totalIncome = totalGross + commercialIncome;
+  const totalIncome = totalGross + commercialIncome + ehrenamtGross;
   const netYearly = totalIncome - totalDeductions;
   const netMonthly = eligibleMonths > 0 ? netYearly / eligibleMonths : 0;
   const effRate = totalIncome > 0 ? totalDeductions / totalIncome : 0;
@@ -2656,7 +3412,7 @@ function calculate() {
   if (taxableProfit < proRatedLimit) {
     statusBox.classList.add('success');
     headline.textContent = '✓ Safe – No KSK Required';
-    desc.textContent = `Your taxable profit of ${eur(taxableProfit)} is below the pro-rated KSK threshold of ${eur(proRatedLimit)} (325 EUR × ${eligibleMonths} months). You are not obligated to join the KSK.`;
+    desc.textContent = `Your taxable profit of ${eur(taxableProfit)} is below the pro-rated KSK threshold of ${eur(proRatedLimit)} (${fmtNum(325)} EUR × ${eligibleMonths} months). You are not obligated to join the KSK.`;
     rec.innerHTML = `<h3>What this means</h3><ul>
       <li><strong>No registration required</strong> for ${year}</li>
       <li>Continue working freely – no social contributions due via KSK</li>
@@ -2666,12 +3422,12 @@ function calculate() {
   } else if (avgMonthlyProfit < 500) {
     statusBox.classList.add('warning');
     headline.textContent = '⚠ Warning – Dead Zone';
-    desc.textContent = `Your profit (${eur(taxableProfit)}) exceeds the ${eur(proRatedLimit)} threshold, but avg. monthly profit (${eur(avgMonthlyProfit)}) is below the 500 EUR floor where KSK is cost-effective. You would owe the Mindestbeitrag of ${eur(minBeitrag)}/mo but earn little.`;
+    desc.textContent = `Your profit (${eur(taxableProfit)}) exceeds the ${eur(proRatedLimit)} threshold, but avg. monthly profit (${eur(avgMonthlyProfit)}) is below the ${fmtNum(500)} EUR floor where KSK is cost-effective. You would owe the Mindestbeitrag of ${eur(minBeitrag)}/mo but earn little.`;
     rec.innerHTML = `<h3>Options</h3><ul>
       <li><strong>Option A:</strong> Reduce income to stay under ${eur(proRatedLimit)} – avoids KSK entirely</li>
       <li><strong>Option B:</strong> Increase income past ~${eur(500 * eligibleMonths)} taxable profit – makes KSK worthwhile</li>
-      <li>Current situation forces minimum ~100 EUR/mo KSK payment on ${eur(avgMonthlyProfit)} average profit</li>
-      <li>Target below <strong>${eur(proRatedLimit / eligibleMonths)}/month</strong> OR above <strong>500 EUR/month</strong></li>
+      <li>Current situation forces minimum ~${fmtNum(100)} EUR/mo KSK payment on ${eur(avgMonthlyProfit)} average profit</li>
+      <li>Target below <strong>${eur(proRatedLimit / eligibleMonths)}/month</strong> OR above <strong>${fmtNum(500)} EUR/month</strong></li>
     </ul>`;
   } else {
     statusBox.classList.add('error');
@@ -2687,15 +3443,21 @@ function calculate() {
   }
 
   // Calculation rows
-  document.getElementById('rGross').textContent = eur(totalGross);
+  document.getElementById('rGross').textContent = eur(totalIncome - commercialIncome);  // §3 Nr.26 + Ehrenamt gross
   document.getElementById('rPauschale').textContent = pauschaleEligible
     ? '- ' + eur(pauschaleDeduct)
-    : '0 EUR (ineligible)';
-  // Ehrenamtspauschale row
-  if (ehrenamtActive) {
+    : eur(0) + ' (ineligible)';
+  // Ehrenamtspauschale rows — gross income + deduction
+  if (ehrenamtActive && ehrenamtGross > 0) {
+    document.getElementById('rEhrenamtGrossRow').style.display = 'flex';
+    document.getElementById('rEhrenamtGross').textContent = '+ ' + eur(ehrenamtGross);
     document.getElementById('rEhrenamtRow').style.display = 'flex';
     document.getElementById('rEhrenamt').textContent = '- ' + eur(ehrenamtDeduct);
+  } else if (ehrenamtActive) {
+    document.getElementById('rEhrenamtGrossRow').style.display = 'none';
+    document.getElementById('rEhrenamtRow').style.display = 'none';
   } else {
+    document.getElementById('rEhrenamtGrossRow').style.display = 'none';
     document.getElementById('rEhrenamtRow').style.display = 'none';
   }
   if (commercialIncome > 0) {
@@ -2719,20 +3481,20 @@ function calculate() {
       : 'Not applicable';
 
   // Populate Mindestbeitrag tooltip with user's actual computed figures
-  const tipKVlabel = healthInsType === 'pkv' ? 'PKV premium' : `KV + Zusatzbeitrag (${(zusatz*100).toFixed(2)}%)`;
-  const tipAVlabel = avType !== 'none' ? `AV (${((AV_RATES[year]||0.013)*100).toFixed(1)}%)` : 'AV (exempt)';
+  const tipKVlabel = healthInsType === 'pkv' ? 'PKV premium' : `KV + Zusatzbeitrag (${fmtPct(zusatz * 100, 2)})`;
+  const tipAVlabel = avType !== 'none' ? `AV (${fmtPct((AV_RATES[year]||0.013) * 100, 1)})` : 'AV (exempt)';
   const tipSource  = year === 2026 ? 'exact published figures' : `approximated from ${year} statutory rates`;
   document.getElementById('tipMinBeitragContent').innerHTML = `
     <strong>Mindestbeitrag – your personalised floor (${year})</strong><br>
-    Calculated on the statutory Mindesteinnahmen of <strong>€3,900/year (€325/mo)</strong>.
+    Calculated on the statutory Mindesteinnahmen of <strong>${fmtNum(3900)} EUR/year (${fmtNum(325)} EUR/mo)</strong>.
     The KV component uses the <em>full</em> GKV rate on this base — not the halved artist share.<br><br>
     <strong>Your figures</strong> (${parentLabel}):<br>
     <table style="font-size:0.78rem;border-collapse:collapse;margin-top:0.4rem;width:100%">
-      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">RV (${(d.rvRate*100).toFixed(1)}%)</td>
+      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">RV (${fmtPct(d.rvRate * 100, 1)})</td>
           <td style="color:var(--accent);font-family:var(--mono);text-align:right">${tipRV > 0 ? eur(tipRV) : '—  (exempt)'}</td></tr>
       <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">${tipKVlabel}</td>
           <td style="color:var(--accent);font-family:var(--mono);text-align:right">${eur(tipKV)}</td></tr>
-      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">PV (${(pvRate*100).toFixed(3)}%)</td>
+      <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">PV (${fmtPct(pvRate * 100, 3)})</td>
           <td style="color:var(--accent);font-family:var(--mono);text-align:right">${eur(tipPV)}</td></tr>
       <tr><td style="color:var(--muted);padding:0.15rem 0.5rem 0.15rem 0">${tipAVlabel}</td>
           <td style="color:var(--accent);font-family:var(--mono);text-align:right">${tipAV > 0 ? eur(tipAV) : '—  (exempt)'}</td></tr>
@@ -2764,10 +3526,10 @@ function calculate() {
   document.getElementById('txYourTax').textContent = eur(yourESt)
     + (yourESt === 0 ? ' (below Grundfreibetrag)' : '');
   document.getElementById('txTotalSeparate').textContent = eur(separateTotalESt);
-  document.getElementById('txSoli').textContent = yourSoli > 0 ? eur(yourSoli) : '0 EUR (below threshold)';
+  document.getElementById('txSoli').textContent = yourSoli > 0 ? eur(yourSoli) : eur(0) + ' (below threshold)';
   document.getElementById('txChurchLine').textContent = churchMember
-    ? `${eur(churchTaxYearly)} (${(churchRate*100).toFixed(0)}% of ESt · ${bundesland})`
-    : '0 EUR (not a member)';
+    ? `${eur(churchTaxYearly)} (${fmtPct(churchRate * 100, 0)} of ESt · ${bundesland})`
+    : eur(0) + ' (not a member)';
   const lohnsteuerEl = document.getElementById('txLohnsteuer');
   if (lohnsteuerEl) lohnsteuerEl.textContent =
     `${eur(lohnsteuer)} (Steuerklasse ${taxClass} withholding — advance payment proxy only)`;
@@ -2799,7 +3561,7 @@ function calculate() {
     const savings = separateTotalESt - jointESt;
     document.getElementById('txSavings').textContent = savings > 0
       ? `+ ${eur(savings)} saved vs. separate`
-      : (savings < 0 ? `${eur(Math.abs(savings))} more than separate` : '0 EUR (no difference)');
+      : (savings < 0 ? `${eur(Math.abs(savings))} more than separate` : eur(0) + ' (no difference)');
     document.getElementById('separatePanel').classList.remove('best');
     document.getElementById('jointPanel').classList.remove('best');
     _chosenAssessment = jointESt < separateTotalESt ? 'joint' : 'separate';
@@ -2835,34 +3597,93 @@ function calculate() {
     spouseSocialData, spouseSocialYearly,
     kgMonthly, kgYearly, kindergeldReceived,
     useKFBSeparate, useKFBJoint, kfbSavingSeparate, kfbSavingJoint,
-    ehrenamtActive, ehrenamtDeduct, pauschaleDeduct
+    ehrenamtActive, ehrenamtDeduct, ehrenamtGross, pauschaleDeduct,
+    vacationLossYearly: 0, sickLossYearly: 0
   };
+
+  // ── Compute vacation/sick losses from the month grid ──────────────────────
+  // Daily rate = totalGross ÷ calendar days in active months.
+  // We compare each month's grid value to (totalGross ÷ eligibleMonths) to
+  // detect how much was already reduced. The calculators store their per-month
+  // loss arrays on the apply-button dataset, so we read those directly.
+  {
+    const vacBtn  = document.getElementById('vacLossStore');
+    const sickBtn = document.getElementById('sickLossStore');
+    const vacLoss  = JSON.parse(vacBtn?.dataset.monthlyLoss  || 'null');
+    const sickLoss = JSON.parse(sickBtn?.dataset.monthlyLoss || 'null');
+
+    if (vacLoss) {
+      _cs.vacationLossYearly = vacLoss.reduce((s, v) => s + (v || 0), 0);
+    }
+    if (sickLoss) {
+      _cs.sickLossYearly = sickLoss.reduce((s, v) => s + (v || 0), 0);
+    }
+
+    // Update summary strips under each calculator
+    const normalMonthly = eligibleMonths > 0 ? totalGross / eligibleMonths : 0;
+    const MONTH_NAMES = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    if (_vacVisible && vacLoss && _cs.vacationLossYearly > 0) {
+      const sumEl = document.getElementById('vacCalcSummary');
+      const txtEl = document.getElementById('vacCalcSummaryText');
+      if (sumEl && txtEl) {
+        const affectedMonths = vacLoss.map((v,i) => v > 0 ? MONTH_NAMES[i] : null).filter(Boolean);
+        txtEl.textContent = `${eur(_cs.vacationLossYearly)} lost across ${affectedMonths.join(', ')} · avg ${eur(_cs.vacationLossYearly / eligibleMonths)}/mo impact`;
+        sumEl.style.display = 'block';
+      }
+    } else {
+      const sumEl = document.getElementById('vacCalcSummary');
+      if (sumEl) sumEl.style.display = 'none';
+    }
+
+    if (_sickVisible && sickLoss && _cs.sickLossYearly > 0) {
+      const sumEl = document.getElementById('sickCalcSummary');
+      const txtEl = document.getElementById('sickCalcSummaryText');
+      if (sumEl && txtEl) {
+        const affectedMonths = sickLoss.map((v,i) => v > 0 ? MONTH_NAMES[i] : null).filter(Boolean);
+        txtEl.textContent = `${eur(_cs.sickLossYearly)} lost across ${affectedMonths.join(', ')} · avg ${eur(_cs.sickLossYearly / eligibleMonths)}/mo impact`;
+        sumEl.style.display = 'block';
+      }
+    } else {
+      const sumEl = document.getElementById('sickCalcSummary');
+      if (sumEl) sumEl.style.display = 'none';
+    }
+  }
+
 
   // ── Dynamic KSK rate display ──
   const kvRateDisplay = healthInsType !== 'pkv'
-    ? ((d.kvRate + zusatz / 2) * 100).toFixed(2) + '% (GKV base+Zusatz/2)'
+    ? fmtPct((d.kvRate + zusatz / 2) * 100, 2) + ' (GKV base+Zusatz/2)'
     : 'PKV – own premium';
-  const pvRateDisplay = (pvRate * 100).toFixed(2) + '%'
+  const pvRateDisplay = fmtPct(pvRate * 100, 2)
     + (children === 0 && age > 23 ? ' (no-child surcharge)' : '')
     + (isSachsen ? ' (+Sachsen 0.5%)' : '');
-  document.getElementById('ntRVrate').textContent = rvType !== 'none' ? (d.rvRate * 100).toFixed(1) + '%' : 'exempt';
+  document.getElementById('ntRVrate').textContent = rvType !== 'none' ? fmtPct(d.rvRate * 100, 1) : 'exempt';
   document.getElementById('ntKVrate').textContent = kvRateDisplay;
   document.getElementById('ntPVrate').textContent = pvRateDisplay;
 
   // ── BBGS cap label values (dynamic per year) ──
-  document.getElementById('rBBGSrvCap').textContent = d.bbgsRV.toLocaleString('de-DE') + ' EUR';
-  document.getElementById('rBBGSkvCap').textContent = d.bbgsKV.toLocaleString('de-DE') + ' EUR';
+  document.getElementById('rBBGSrvCap').textContent = eur(d.bbgsRV);
+  document.getElementById('rBBGSkvCap').textContent = fmtNum(d.bbgsKV) + ' EUR';
 
   // Netto breakdown
-  // Gross = totalIncome; qualifying and commercial as sub-lines
+  // Gross = totalIncome (qualifying + commercial + ehrenamt); sub-lines shown when relevant
   document.getElementById('ntGross').textContent = eur(totalIncome);
   document.getElementById('ntQualifying').textContent = eur(totalGross);
-  document.getElementById('ntQualifyingRow').style.display = commercialIncome > 0 ? 'flex' : 'none';
+  // Show §3 Nr.26 qualifying sub-line when there are other income streams
+  document.getElementById('ntQualifyingRow').style.display =
+    (commercialIncome > 0 || ehrenamtGross > 0) ? 'flex' : 'none';
   if (commercialIncome > 0) {
     document.getElementById('ntCommercialRow').style.display = 'flex';
     document.getElementById('ntCommercial').textContent = eur(commercialIncome);
   } else {
     document.getElementById('ntCommercialRow').style.display = 'none';
+  }
+  if (ehrenamtActive && ehrenamtGross > 0) {
+    document.getElementById('ntEhrenamtGrossRow').style.display = 'flex';
+    document.getElementById('ntEhrenamtGross').textContent = eur(ehrenamtGross);
+  } else {
+    document.getElementById('ntEhrenamtGrossRow').style.display = 'none';
   }
   // Taxable profit row — label varies by activity type
   const isMixedCalc = activity === 'mixed' && pauschaleEligible;
@@ -2895,11 +3716,11 @@ function calculate() {
     document.getElementById('ntKV').textContent = '- ' + eur(yearlyKV);
     document.getElementById('ntPV').textContent = '- ' + eur(yearlyPV);
     document.getElementById('ntAV').textContent = '- ' + eur(yearlyAV);
-    document.getElementById('ntAVrate').textContent = avType !== 'none' ? ((AV_RATES[year] || 0.013) * 100).toFixed(1) + '%' : 'exempt';
+    document.getElementById('ntAVrate').textContent = avType !== 'none' ? fmtPct((AV_RATES[year] || 0.013) * 100, 1) : 'exempt';
   } else {
     document.getElementById('ntKSKLabel').textContent = 'KSK contributions';
     document.getElementById('ntKSKRow').className = 'row';
-    document.getElementById('ntKSKTotal').textContent = '0 EUR (not required)';
+    document.getElementById('ntKSKTotal').textContent = eur(0) + ' (not required)';
     document.getElementById('ntKSKTotal').style.color = 'var(--success)';
     document.getElementById('ntRVRow').style.display = 'none';
     document.getElementById('ntKVRow').style.display = 'none';
@@ -2908,35 +3729,14 @@ function calculate() {
   }
   const estLabelCalc = _chosenAssessment === 'joint' ? 'Ehegattensplitting (joint)' : 'getrennte Veranlagung (separate)';
   document.getElementById('ntEStLabel').textContent = estLabelCalc;
-  document.getElementById('ntESt').textContent = chosenESt > 0 ? ('- ' + eur(chosenESt)) : '0 EUR (below Grundfreibetrag)';
-  document.getElementById('ntSoli2').textContent = chosenSoli > 0 ? ('- ' + eur(chosenSoli)) : '0 EUR';
-  document.getElementById('ntChurch').textContent = churchRate > 0 ? ('- ' + eur(churchTaxYearly)) : '0 EUR (none)';
+  document.getElementById('ntESt').textContent = chosenESt > 0 ? ('- ' + eur(chosenESt)) : eur(0) + ' (below Grundfreibetrag)';
+  document.getElementById('ntSoli2').textContent = chosenSoli > 0 ? ('- ' + eur(chosenSoli)) : eur(0);
+  document.getElementById('ntChurch').textContent = churchRate > 0 ? ('- ' + eur(churchTaxYearly)) : eur(0) + ' (none)';
   document.getElementById('ntTotalDeduct').textContent = eur(totalDeductions);
   document.getElementById('ntEffRate').textContent = pct(effRate);
 
   // Render with current period toggle (default monthly)
-  renderSummary();
-
-  // ── Headroom: how much more gross can be earned before KSK triggers ──
-  const headroomBox = document.getElementById('headroomBox');
-  if (!kskRequired) {
-    // headroom = (proRatedLimit - taxableProfit) remaining taxable profit
-    // gross headroom = taxable headroom (expenses already deducted)
-    const taxableHeadroom = proRatedLimit - taxableProfit;
-    const monthlyTaxableHeadroom = taxableHeadroom / eligibleMonths;
-    headroomBox.style.display = 'block';
-    headroomBox.className = taxableHeadroom < proRatedLimit * 0.25 ? 'headroom-box warn' : 'headroom-box';
-    headroomBox.innerHTML = `
-      <div class="headroom-amount">${eur(monthlyTaxableHeadroom)}/mo</div>
-      <div class="headroom-desc">
-        <strong>Additional monthly profit before KSK is required</strong><br>
-        You can earn ~${eur(monthlyTaxableHeadroom)} more per month in taxable profit (avg. over ${eligibleMonths} months)
-        before crossing the KSK threshold of ${eur(proRatedLimit)} total for ${year}.
-        That's ${eur(taxableHeadroom)} remaining taxable headroom this year.
-      </div>`;
-  } else {
-    headroomBox.style.display = 'none';
-  }
+  renderSummary(); // renderSummary now calls renderHeadroomsWithAdjustments internally
 
   const bbgsNote = [];
   if (avgMonthlyProfit > d.bbgsRV) bbgsNote.push(`RV contribution capped at BBGS ${eur(d.bbgsRV)}/mo`);
@@ -2950,7 +3750,9 @@ function calculate() {
   document.getElementById('taxResults').classList.add('show');
   document.getElementById('nettoResults').classList.add('show');
   document.getElementById('kskResults').classList.add('show');
-  document.getElementById('kskResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!_suppressResultScroll) {
+    document.getElementById('kskResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 // ──────────────────────────────────────────────────────────
@@ -2959,7 +3761,7 @@ function calculate() {
 let _varCounter = 0;
 
 function durationOptions(selected) {
-  const opts = [['0.5','30 min'],['0.75','45 min'],['1','1 hr'],['1.5','1.5 hr'],['2','2 hr']];
+  const opts = [['0.25','15 min'],['0.5','30 min'],['0.75','45 min'],['1','1 hr'],['1.5','1.5 hr'],['2','2 hr']];
   return opts.map(([v,l]) => `<option value="${v}"${v===selected?' selected':''}>${l}</option>`).join('');
 }
 function sessionsOptions(selected) {
@@ -3091,6 +3893,162 @@ function recalcTeaching() {
     warnBadge.style.display = 'none';
     warnDetail.style.display = 'none';
   }
+
+  if (typeof recalcBoth === 'function') recalcBoth();
+}
+
+// ──────────────────────────────────────────────────────────
+// EHRENAMTS INCOME CALCULATOR — §3 Nr. 26a roles
+// ──────────────────────────────────────────────────────────
+let _ecCounter = 0;
+
+const EHRENAMT_ROLES = [
+  'Board member (Vorstandsmitglied)',
+  'Treasurer (Kassenwart)',
+  'Secretary (Schriftführer)',
+  'Event coordinator',
+  'Administrative volunteer',
+  'Fundraising coordinator',
+  'Social media / PR volunteer',
+  'Newsletter / communications',
+  'Website maintenance',
+  'Membership administration',
+  'Meeting facilitator',
+  'Project coordinator',
+  'Welfare / pastoral care volunteer',
+  'Library / archive volunteer',
+  'Sports club official (Kampfrichter)',
+  'Youth group leader (Jugendleiter)',
+  'Other honorary role',
+];
+
+function ehrenamtRoleOptions(selected) {
+  return EHRENAMT_ROLES.map(r =>
+    `<option value="${r}"${r===selected?' selected':''}>${r}</option>`
+  ).join('');
+}
+
+function ehrenamtFreqOptions(selected) {
+  const opts = [
+    ['weekly','Weekly'],
+    ['biweekly','Bi-weekly'],
+    ['monthly','Monthly'],
+  ];
+  return opts.map(([v,l]) => `<option value="${v}"${v===selected?' selected':''}>${l}</option>`).join('');
+}
+
+function ehrenamtHrsOptions(selected) {
+  const opts = [
+    ['0.25','15 min'],['0.5','30 min'],['0.75','45 min'],
+    ['1','1 hr'],['1.5','1.5 hr'],['2','2 hr'],['3','3 hr'],['4','4 hr'],
+  ];
+  return opts.map(([v,l]) => `<option value="${v}"${v===selected?' selected':''}>${l}</option>`).join('');
+}
+
+function addEhrenamtRow(role=EHRENAMT_ROLES[0], rate='', hrs='1', freq='monthly') {
+  const id = ++_ecCounter;
+  const row = document.createElement('div');
+  row.id = `ecrow-${id}`;
+  row.className = 'ec-row';
+  row.innerHTML = `
+    <div>
+      <div class="tc-mobile-label">Role</div>
+      <select id="ecRole-${id}" class="ec-input" onchange="recalcEhrenamt()">${ehrenamtRoleOptions(role)}</select>
+    </div>
+    <div>
+      <div class="tc-mobile-label">Rate (€/hr)</div>
+      <input type="number" id="ecRate-${id}" value="${rate}" placeholder="e.g. 12" min="0" step="0.5" class="ec-input" oninput="recalcEhrenamt()">
+    </div>
+    <div>
+      <div class="tc-mobile-label">Hours / session</div>
+      <select id="ecHrs-${id}" class="ec-input" onchange="recalcEhrenamt()">${ehrenamtHrsOptions(hrs)}</select>
+    </div>
+    <div>
+      <div class="tc-mobile-label">Frequency</div>
+      <select id="ecFreq-${id}" class="ec-input" onchange="recalcEhrenamt()">${ehrenamtFreqOptions(freq)}</select>
+    </div>
+    <div id="ecResult-${id}" class="ec-row-result">—</div>
+    <button onclick="removeEhrenamtRow(${id})" class="tc-remove" title="Remove">×</button>`;
+  document.getElementById('ehrenamtRows').appendChild(row);
+  recalcEhrenamt();
+}
+
+function removeEhrenamtRow(id) {
+  const el = document.getElementById(`ecrow-${id}`);
+  if (el) el.remove();
+  if (!document.getElementById('ehrenamtRows').children.length) addEhrenamtRow();
+  else recalcEhrenamt();
+}
+
+function recalcEhrenamt() {
+  const rows = document.getElementById('ehrenamtRows')?.children;
+  if (!rows) return;
+  let totalMonthly = 0;
+  let anyData = false;
+
+  // Frequency → monthly multiplier
+  const freqToMonthly = { weekly: 4.33, biweekly: 2.165, monthly: 1 };
+
+  Array.from(rows).forEach(row => {
+    const id       = row.id.replace('ecrow-','');
+    const rate     = parseFloat(document.getElementById(`ecRate-${id}`)?.value) || 0;
+    const hrs      = parseFloat(document.getElementById(`ecHrs-${id}`)?.value)  || 1;
+    const freq     = document.getElementById(`ecFreq-${id}`)?.value || 'monthly';
+    const resEl    = document.getElementById(`ecResult-${id}`);
+    const mult     = freqToMonthly[freq] || 1;
+
+    if (rate) {
+      anyData = true;
+      const monthly = rate * hrs * mult;
+      totalMonthly += monthly;
+      if (resEl) { resEl.textContent = eur(monthly); resEl.style.color = 'var(--accent2)'; }
+    } else {
+      if (resEl) { resEl.textContent = '—'; resEl.style.color = 'var(--muted)'; }
+    }
+  });
+
+  const resultEl  = document.getElementById('ehrenamtCalcResult');
+  const yearlyEl  = document.getElementById('ehrenamtCalcYearly');
+  const btn       = document.getElementById('btnApplyEhrenamt');
+  const noteEl    = document.getElementById('ehrenamtCalcNote');
+  const year      = parseInt(document.getElementById('year')?.value) || 2026;
+  const limit     = EHRENAMT_BY_YEAR[year] || 960;
+
+  if (anyData) {
+    const yearly = totalMonthly * 12;
+    resultEl.textContent = eur(totalMonthly) + '/mo';
+    yearlyEl.textContent = eur(yearly) + '/yr';
+    btn.disabled = false; btn.style.opacity = '1';
+    btn.dataset.yearly = yearly;
+
+    // Show limit note
+    noteEl.style.display = 'block';
+    const taxFree = Math.min(limit, yearly);
+    const taxable = Math.max(0, yearly - limit);
+    if (taxable > 0) {
+      noteEl.innerHTML = `ℹ ${eur(taxFree)} tax-free · <span style="color:var(--warn);">${eur(taxable)} above the ${limit} EUR Pauschale will be taxable.</span>`;
+      noteEl.style.color = '';
+    } else {
+      noteEl.innerHTML = `✓ Full ${eur(yearly)} is within the ${limit} EUR Pauschale — entirely tax-free.`;
+      noteEl.style.color = 'var(--success)';
+    }
+  } else {
+    resultEl.textContent = '—';
+    yearlyEl.textContent = '—';
+    btn.disabled = true; btn.style.opacity = '0.4';
+    noteEl.style.display = 'none';
+  }
+  // Ehrenamts income affects the work-day rate used by vacation/sick calculators
+  if (typeof recalcBoth === 'function') recalcBoth();
+}
+
+function applyEhrenamtCalc() {
+  const yearly = parseFloat(document.getElementById('btnApplyEhrenamt')?.dataset.yearly) || 0;
+  const input  = document.getElementById('ehrenamtGross');
+  if (input) {
+    input.value = yearly.toFixed(2);
+    updatePauschaleEligibility();
+  }
 }
 
 function applyToAllMonths() {
@@ -3113,8 +4071,722 @@ function applyToFutureMonths() {
 }
 
 // ──────────────────────────────────────────────────────────
-// VAT / UMSATZSTEUER NOTE
+// VACATION / TIME-OFF IMPACT CALCULATOR
 // ──────────────────────────────────────────────────────────
+let _vacCounter = 0;
+let _vacVisible = false;
+
+function toggleVacationCalc() {
+  _vacVisible = !_vacVisible;
+  const el  = document.getElementById('vacationCalc');
+  const btn = document.getElementById('btnVacationToggle');
+  el.style.display  = _vacVisible ? 'block' : 'none';
+  btn.style.color   = _vacVisible ? 'var(--warn)' : 'var(--muted)';
+  btn.style.borderColor = _vacVisible ? 'rgba(245,200,66,0.5)' : 'var(--border)';
+  if (_vacVisible && !document.getElementById('vacationRows').children.length) {
+    addVacationRow();
+  }
+  updateWorkSchedulePanel();
+}
+
+function addVacationRow(label='', from='', to='') {
+  const id  = ++_vacCounter;
+  const row = document.createElement('div');
+  row.id        = `vacrow-${id}`;
+  row.className = 'vac-row';
+  row.innerHTML = `
+    <input type="text" id="vacLabel-${id}" value="${label}" placeholder="e.g. Summer vacation" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:0.82rem;padding:0.42rem 0.5rem;width:100%;min-width:0;" oninput="recalcVacation()">
+    <div class="date-field" onclick="openDatePicker('vacFrom-${id}')">
+      <input type="text" id="vacFromDisplay-${id}" class="date-display" placeholder="${dateFormatHint()}" readonly>
+      <input type="date" id="vacFrom-${id}" class="date-picker" value="${from}" oninput="onVacFromChange(${id})" onchange="onVacFromChange(${id})">
+    </div>
+    <div class="date-field" onclick="openDatePicker('vacTo-${id}')">
+      <input type="text" id="vacToDisplay-${id}" class="date-display" placeholder="${dateFormatHint()}" readonly>
+      <input type="date" id="vacTo-${id}" class="date-picker" value="${to}" oninput="onVacToChange(${id})" onchange="onVacToChange(${id})">
+    </div>
+    <div id="vacDays-${id}" class="vac-days empty">—</div>
+    <div id="vacLost-${id}" class="vac-lost empty">—</div>
+    <button onclick="removeVacationRow(${id})" class="tc-remove" title="Remove">×</button>`;
+  document.getElementById('vacationRows').appendChild(row);
+  applyDateInputLocale();
+  syncDateDisplay(`vacFromDisplay-${id}`, `vacFrom-${id}`);
+  syncDateDisplay(`vacToDisplay-${id}`, `vacTo-${id}`);
+}
+
+function onVacFromChange(id) {
+  const fromEl = document.getElementById(`vacFrom-${id}`);
+  const toEl   = document.getElementById(`vacTo-${id}`);
+  if (!fromEl || !toEl) return;
+  if (!toEl.value || toEl.value < fromEl.value) {
+    toEl.value = fromEl.value;
+  }
+  syncDateDisplay(`vacFromDisplay-${id}`, `vacFrom-${id}`);
+  syncDateDisplay(`vacToDisplay-${id}`, `vacTo-${id}`);
+  recalcVacation();
+}
+
+function onVacToChange(id) {
+  const fromEl = document.getElementById(`vacFrom-${id}`);
+  const toEl   = document.getElementById(`vacTo-${id}`);
+  if (!fromEl || !toEl) return;
+  if (toEl.value && fromEl.value && toEl.value < fromEl.value) {
+    toEl.value = fromEl.value;
+  }
+  syncDateDisplay(`vacToDisplay-${id}`, `vacTo-${id}`);
+  recalcVacation();
+}
+
+function removeVacationRow(id) {
+  const el = document.getElementById(`vacrow-${id}`);
+  if (el) el.remove();
+  recalcVacation();
+}
+
+// ── Work schedule helpers ────────────────────────────────
+// Days: 0=Sun,1=Mon,...,6=Sat (matches Date.getDay())
+// NOTE: we use plain div.work-day (not label) to avoid the browser's native
+// checkbox-toggle fighting with our manual flip. The onclick on the div
+// reads the current state *after* we set it explicitly.
+function toggleWorkDay(dayIndex) {
+  const cb    = document.getElementById(`wd-${dayIndex}`);
+  const label = document.getElementById(`wdLabel-${dayIndex}`);
+  if (!cb) return;
+  // cb is a hidden checkbox — manually flip it (no label wrapping, so no double-toggle)
+  cb.checked = !cb.checked;
+  label.classList.toggle('active', cb.checked);
+  recalcBoth();
+}
+
+function toggleWorkDayE(dayIndex) {
+  const cb    = document.getElementById(`wdE-${dayIndex}`);
+  const label = document.getElementById(`wdELabel-${dayIndex}`);
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  label.classList.toggle('active', cb.checked);
+  recalcBoth();
+}
+
+function recalcBoth() {
+  recalcVacation();
+  recalcSick();
+}
+
+function dateFormatHint() {
+  return _settings?.format === 'us' ? 'MM/DD/YYYY' : 'DD.MM.YYYY';
+}
+
+function formatDateDisplay(isoStr) {
+  if (!isoStr) return '';
+  const [y,m,d] = isoStr.split('-');
+  if (!y || !m || !d) return '';
+  return _settings?.format === 'us' ? `${m}/${d}/${y}` : `${d}.${m}.${y}`;
+}
+
+function openDatePicker(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (typeof el.showPicker === 'function') el.showPicker();
+  else el.focus();
+}
+
+function syncDateDisplay(displayId, pickerId) {
+  const display = document.getElementById(displayId);
+  const picker  = document.getElementById(pickerId);
+  if (!display || !picker) return;
+  display.value = picker.value ? formatDateDisplay(picker.value) : '';
+  display.placeholder = dateFormatHint();
+}
+
+function updateDateFormatHints() {
+  const hint = dateFormatHint();
+  const vacFrom = document.getElementById('vacFromHeader');
+  const vacTo   = document.getElementById('vacToHeader');
+  const sickFrom = document.getElementById('sickFromHeader');
+  const sickTo   = document.getElementById('sickToHeader');
+  if (vacFrom) vacFrom.textContent = `From (${hint})`;
+  if (vacTo)   vacTo.textContent   = `To (${hint})`;
+  if (sickFrom) sickFrom.textContent = `From (${hint})`;
+  if (sickTo)   sickTo.textContent   = `To (${hint})`;
+  applyDateInputLocale();
+  refreshDateDisplays();
+}
+
+function applyDateInputLocale() {
+  const lang = _settings?.format === 'us' ? 'en-US' : 'de-DE';
+  document.querySelectorAll('.vac-row input[type="date"], .sick-row input[type="date"]').forEach(inp => {
+    inp.setAttribute('lang', lang);
+    inp.setAttribute('title', dateFormatHint());
+  });
+}
+
+function refreshDateDisplays() {
+  document.querySelectorAll('.vac-row .date-display, .sick-row .date-display').forEach(inp => {
+    inp.placeholder = dateFormatHint();
+  });
+  document.querySelectorAll('.vac-row .date-picker').forEach(p => {
+    const id = p.id.replace('vacFrom-','vacFromDisplay-').replace('vacTo-','vacToDisplay-');
+    syncDateDisplay(id, p.id);
+  });
+  document.querySelectorAll('.sick-row .date-picker').forEach(p => {
+    const id = p.id.replace('sickFrom-','sickFromDisplay-').replace('sickTo-','sickToDisplay-');
+    syncDateDisplay(id, p.id);
+  });
+}
+
+// Returns array of active day-of-week indices (0=Sun … 6=Sat)
+// A day is "active" if it is checked (hours optional)
+function getWorkDays() {
+  const days = new Set();
+  getWorkDaysFrom('wd-').forEach(d => days.add(d));
+  if (document.getElementById('ehrenamtToggle')?.value === 'yes') {
+    getWorkDaysFrom('wdE-').forEach(d => days.add(d));
+  }
+  return Array.from(days);
+}
+
+function getWorkDaysFrom(prefix) {
+  const days = [];
+  [0,1,2,3,4,5,6].forEach(d => {
+    const cb = document.getElementById(`${prefix}${d}`);
+    if (cb?.checked) days.push(d);
+  });
+  return days;
+}
+
+// Returns total work-hours per week from schedule (teaching + Ehrenamts if enabled)
+function getWeeklyWorkHours() {
+  return 0;
+}
+
+// Count working days (per schedule) in [fromDate, toDate] inclusive
+function countWorkingDaysInRange(fromDate, toDate) {
+  const workDays = getWorkDays();
+  if (!workDays.length) return 0;
+  let count = 0;
+  const cur = new Date(fromDate);
+  while (cur <= toDate) {
+    if (workDays.includes(cur.getDay())) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+// Count working days in a date range that fall within a given month
+function workingDaysInRangeForMonth(fromDate, toDate, year, month) {
+  const start = new Date(Math.max(fromDate, new Date(year, month - 1, 1)));
+  const end   = new Date(Math.min(toDate,   new Date(year, month, 0)));
+  if (start > end) return 0;
+  return countWorkingDaysInRange(start, end);
+}
+
+// Total working days in a month given the schedule
+function workingDaysInMonth(year, month) {
+  const start = new Date(year, month - 1, 1);
+  const end   = new Date(year, month, 0);
+  return countWorkingDaysInRange(start, end);
+}
+
+// Returns daily income based on the actual monthly grid values.
+// dailyRate   = income ÷ calendar days (used by sick calc — illness covers all days)
+// workDayRate = income ÷ working days  (used by vacation calc — only scheduled work days lost)
+// Includes both teaching grid income AND applied Ehrenamts income for an accurate combined rate.
+function gridDailyRate() {
+  const year = parseInt(document.getElementById('year')?.value) || new Date().getFullYear();
+  const inputs = document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])');
+  let totalIncome    = 0;
+  let totalCalDays   = 0;
+  let totalWorkDays  = 0;
+  let hasGridIncome  = false;
+  inputs.forEach(inp => {
+    const val = parseFloat(inp.value) || 0;
+    const m   = parseInt(inp.dataset.month);
+    if (val > 0) hasGridIncome = true;
+    totalIncome   += val;
+    totalCalDays  += new Date(year, m, 0).getDate();
+    totalWorkDays += workingDaysInMonth(year, m);
+  });
+  // Add Ehrenamts monthly income if active
+  const ehrenamtToggle = document.getElementById('ehrenamtToggle')?.value;
+  if (ehrenamtToggle === 'yes') {
+    const ehrenamtMonthly = parseFloat(document.getElementById('ehrenamtGross')?.value) / 12 || 0;
+    const startMonth = parseInt(document.getElementById('startMonth')?.value) || 1;
+    const activeMonths = 13 - startMonth; // remaining months
+    if (ehrenamtMonthly > 0 && activeMonths > 0) {
+      totalIncome += ehrenamtMonthly * activeMonths;
+    }
+  }
+  let dailyRate    = totalCalDays  > 0 ? totalIncome / totalCalDays  : 0;
+  let workDayRate  = totalWorkDays > 0 ? totalIncome / totalWorkDays : 0;
+  let weeklyIncome = dailyRate * 7;
+
+  if (!hasGridIncome) {
+    const fallback = teachingDailyRate();
+    if (fallback.weeklyIncome > 0) {
+      dailyRate = fallback.dailyRate;
+      const workDaysPerWeek = getWorkDays().length || 0;
+      workDayRate = workDaysPerWeek > 0 ? (fallback.weeklyIncome / workDaysPerWeek) : fallback.dailyRate;
+      weeklyIncome = fallback.weeklyIncome;
+    }
+  }
+  return { dailyRate, workDayRate, weeklyIncome, totalWorkDays };
+}
+
+// Returns daily income given current Teaching Calculator state (used as fallback when grid is empty).
+// We derive a "sessions per week" total and "income per session" from all variation rows.
+// Then: dailyRate = totalWeeklyIncome / 7  (spread evenly for simplicity — user can refine
+//       via the per-month grid after applying).
+// More precise: use sessions/week × days/week fraction.
+function teachingDailyRate() {
+  const rows = document.getElementById('variationRows')?.children || [];
+  let totalWeeklyIncome = 0;
+  let totalSessionsPerWeek = 0;
+
+  Array.from(rows).forEach(row => {
+    const id       = row.id.replace('vrow-','');
+    const students = parseFloat(document.getElementById(`vStudents-${id}`)?.value) || 0;
+    const rate     = parseFloat(document.getElementById(`vRate-${id}`)?.value)     || 0;
+    const dur      = parseFloat(document.getElementById(`vDur-${id}`)?.value)      || 1;
+    const sessions = parseFloat(document.getElementById(`vSessions-${id}`)?.value) || 0;
+    const weeks    = parseFloat(document.getElementById(`vWeeks-${id}`)?.value)    || 4;
+    if (students && rate && sessions) {
+      const perSession = students * rate * dur;
+      // sessions/week = sessions * (weeks/4.33) — normalise wks/mo to wks/week
+      const sessionsPerWeek = sessions * (weeks / 4.33);
+      totalSessionsPerWeek += sessionsPerWeek;
+      totalWeeklyIncome    += perSession * sessionsPerWeek;
+    }
+  });
+  // Daily rate: spread weekly income over 7 days
+  // Per-session rate used for whole-day loss: totalWeeklyIncome / 7
+  return { dailyRate: totalWeeklyIncome / 7, weeklyIncome: totalWeeklyIncome, sessionsPerWeek: totalSessionsPerWeek };
+}
+
+// Count calendar days in a date range that fall within a given month (year/month 1-based)
+function daysInRangeForMonth(fromDate, toDate, year, month) {
+  const start = new Date(Math.max(fromDate, new Date(year, month - 1, 1)));
+  const end   = new Date(Math.min(toDate,   new Date(year, month, 0)));  // last day of month
+  if (start > end) return 0;
+  return Math.round((end - start) / 86400000) + 1;
+}
+
+function recalcVacation() {
+  const rows = document.getElementById('vacationRows')?.children || [];
+  const { workDayRate, weeklyIncome } = gridDailyRate();
+  const year = parseInt(document.getElementById('year')?.value) || new Date().getFullYear();
+
+  let grandTotalWorkDays = 0;
+  let grandTotalLost     = 0;
+  let futureWorkDays     = 0;
+  let futureLost         = 0;
+
+  // Per-month loss accumulator (months 1–12)
+  const monthlyLoss = new Array(13).fill(0);
+
+  Array.from(rows).forEach(row => {
+    const id      = row.id.replace('vacrow-','');
+    const fromEl  = document.getElementById(`vacFrom-${id}`);
+    const toEl    = document.getElementById(`vacTo-${id}`);
+    const daysEl  = document.getElementById(`vacDays-${id}`);
+    const lostEl  = document.getElementById(`vacLost-${id}`);
+
+    const fromStr = fromEl?.value;
+    const toStr   = toEl?.value;
+
+    if (!fromStr || !toStr) {
+      daysEl.textContent = '—'; daysEl.className = 'vac-days empty';
+      lostEl.textContent = '—'; lostEl.className = 'vac-lost empty';
+      return;
+    }
+
+    const [fy, fm, fd] = fromStr.split('-').map(Number);
+    const [ty, tm, td] = toStr.split('-').map(Number);
+    const fromDate = new Date(fy, fm - 1, fd);
+    const toDate   = new Date(ty, tm - 1, td);
+
+    if (fromDate > toDate) {
+      daysEl.textContent = '⚠ Invalid'; daysEl.className = 'vac-days';
+      daysEl.style.color = 'var(--error)';
+      lostEl.textContent = '—'; lostEl.className = 'vac-lost empty';
+      return;
+    }
+
+    // Clip to selected tax year (allow next-year estimates)
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd   = new Date(year, 11, 31);
+    if (toDate < yearStart) {
+      daysEl.textContent = '0 (out of year)'; daysEl.className = 'vac-days empty';
+      lostEl.textContent = eur(0); lostEl.className = 'vac-lost empty';
+      return;
+    }
+
+    const calcFrom = new Date(Math.max(fromDate, yearStart));
+    const calcTo   = toDate;
+    if (calcFrom > calcTo) {
+      daysEl.textContent = '0 (out of year)'; daysEl.className = 'vac-days empty';
+      lostEl.textContent = eur(0); lostEl.className = 'vac-lost empty';
+      return;
+    }
+
+    // Count only scheduled working days — vacation doesn't cost non-working days
+    const workDays  = countWorkingDaysInRange(calcFrom, calcTo);
+    const lostIncome = workDayRate * workDays;
+
+    grandTotalWorkDays += workDays;
+    grandTotalLost     += lostIncome;
+
+    daysEl.textContent = workDays + ' work days'; daysEl.className = 'vac-days';
+    daysEl.style.color = 'var(--warn)';
+    lostEl.textContent = workDayRate > 0 ? '- ' + eur(lostIncome) : '—';
+    lostEl.className   = 'vac-lost';
+    lostEl.style.color = 'var(--warn)';
+
+    // Accumulate per-month working-day losses
+    const effFrom = new Date(Math.max(fromDate, yearStart));
+    const effTo   = new Date(Math.min(toDate, yearEnd));
+    if (effFrom <= effTo) {
+      for (let m = 1; m <= 12; m++) {
+        const wdInMonth = workingDaysInRangeForMonth(effFrom, effTo, year, m);
+        monthlyLoss[m] += workDayRate * wdInMonth;
+      }
+    }
+
+    if (toDate > yearEnd) {
+      const futureFrom = new Date(Math.max(fromDate, new Date(year + 1, 0, 1)));
+      const futureTo   = toDate;
+      if (futureFrom <= futureTo) {
+        const wdFuture = countWorkingDaysInRange(futureFrom, futureTo);
+        futureWorkDays += wdFuture;
+        futureLost     += workDayRate * wdFuture;
+      }
+    }
+  });
+
+  // Update totals
+  const totalDaysEl = document.getElementById('vacTotalDays');
+  const totalLostEl = document.getElementById('vacTotalLost');
+  const storeEl     = document.getElementById('vacLossStore');
+  const breakdownEl = document.getElementById('vacMonthBreakdown');
+
+  if (grandTotalWorkDays > 0) {
+    totalDaysEl.textContent = grandTotalWorkDays + ' work days';
+    totalLostEl.textContent = workDayRate > 0 ? '- ' + eur(grandTotalLost) : '(enter income in the monthly grid first)';
+    storeEl.dataset.monthlyLoss = JSON.stringify(monthlyLoss);
+
+    // Month breakdown — use actual grid value for each month as the baseline
+    const MONTH_NAMES   = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const startMonth    = parseInt(document.getElementById('startMonth')?.value) || 1;
+    // Build a map of month → actual grid income
+    const gridByMonth = {};
+    document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])').forEach(inp => {
+      const mo = parseInt(inp.dataset.month);
+      gridByMonth[mo] = parseFloat(inp.value) || 0;
+    });
+    let breakdownHTML   = '<strong style="color:var(--text);">Monthly impact:</strong><div style="margin-top:0.4rem;display:flex;flex-wrap:wrap;gap:0.4rem 1rem;">';
+    let anyMonthLoss    = false;
+    for (let m = startMonth; m <= 12; m++) {
+      if (monthlyLoss[m] > 0) {
+        anyMonthLoss = true;
+        const baseIncome = gridByMonth[m] ?? 0;
+        const adjusted = Math.max(0, baseIncome - monthlyLoss[m]);
+        breakdownHTML += `<span><strong style="color:var(--warn);">${MONTH_NAMES[m]}</strong>: ${eur(baseIncome)} → <span style="color:var(--success);">${eur(adjusted)}</span> <span style="color:var(--muted);font-size:0.74rem;">(−${eur(monthlyLoss[m])})</span></span>`;
+      }
+    }
+    breakdownHTML += '</div>';
+    if (anyMonthLoss && workDayRate > 0) {
+      breakdownEl.innerHTML    = breakdownHTML;
+      breakdownEl.style.display = 'block';
+    } else if (grandTotalWorkDays > 0 && workDayRate === 0) {
+      breakdownEl.innerHTML    = '<span style="color:var(--muted);">Enter income in the monthly grid above to see monthly impact.</span>';
+      breakdownEl.style.display = 'block';
+    } else {
+      breakdownEl.style.display = 'none';
+    }
+  } else {
+    totalDaysEl.textContent = '—';
+    totalLostEl.textContent = '—';
+    storeEl.dataset.monthlyLoss = 'null';
+    breakdownEl.style.display = 'none';
+  }
+  const warnEl = document.getElementById('vacNextYearWarning');
+  if (warnEl) {
+    if (futureWorkDays > 0) {
+      const estLoss = workDayRate > 0 ? ` (≈ ${eur(futureLost)})` : '';
+      warnEl.innerHTML = `⚠ Includes ${futureWorkDays} work day${futureWorkDays !== 1 ? 's' : ''} after ${year}. This is an estimate using ${year} income and work schedule${estLoss}.`;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+  updateMakeupSuggestion();
+  if (_cs) { _cs.vacationLossYearly = grandTotalLost || 0; renderSummary(); }
+}
+// ──────────────────────────────────────────────────────────
+let _sickCounter = 0;
+let _sickVisible = false;
+
+function toggleSickCalc() {
+  _sickVisible = !_sickVisible;
+  const el  = document.getElementById('sickCalc');
+  const btn = document.getElementById('btnSickToggle');
+  el.style.display      = _sickVisible ? 'block' : 'none';
+  btn.style.color       = _sickVisible ? 'var(--error)' : 'var(--muted)';
+  btn.style.borderColor = _sickVisible ? 'rgba(245,83,106,0.5)' : 'var(--border)';
+  if (_sickVisible && !document.getElementById('sickRows').children.length) {
+    addSickRow();
+  }
+  updateWorkSchedulePanel();
+}
+
+function updateWorkSchedulePanel() {
+  const ehrenamtOn = document.getElementById('ehrenamtToggle')?.value === 'yes';
+  const show = _vacVisible || _sickVisible;
+  document.getElementById('workSchedulePanel').style.display = show ? 'block' : 'none';
+  const ePanel = document.getElementById('ehrenamtSchedulePanel');
+  if (ePanel) ePanel.style.display = ehrenamtOn ? 'block' : 'none';
+}
+
+function addSickRow(label='', from='', to='') {
+  const id  = ++_sickCounter;
+  const row = document.createElement('div');
+  row.id        = `sickrow-${id}`;
+  row.className = 'sick-row';
+  row.innerHTML = `
+    <input type="text" id="sickLabel-${id}" value="${label}" placeholder="e.g. Flu, Jan" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:0.82rem;padding:0.42rem 0.5rem;width:100%;min-width:0;" oninput="recalcSick()">
+    <div class="date-field" onclick="openDatePicker('sickFrom-${id}')">
+      <input type="text" id="sickFromDisplay-${id}" class="date-display" placeholder="${dateFormatHint()}" readonly>
+      <input type="date" id="sickFrom-${id}" class="date-picker" value="${from}" oninput="onSickFromChange(${id})" onchange="onSickFromChange(${id})">
+    </div>
+    <div class="date-field" onclick="openDatePicker('sickTo-${id}')">
+      <input type="text" id="sickToDisplay-${id}" class="date-display" placeholder="${dateFormatHint()}" readonly>
+      <input type="date" id="sickTo-${id}" class="date-picker" value="${to}" oninput="onSickToChange(${id})" onchange="onSickToChange(${id})">
+    </div>
+    <div id="sickDays-${id}" class="sick-days empty">—</div>
+    <div id="sickLost-${id}" class="sick-lost empty">—</div>
+    <button onclick="removeSickRow(${id})" class="tc-remove" title="Remove">×</button>`;
+  document.getElementById('sickRows').appendChild(row);
+  applyDateInputLocale();
+  syncDateDisplay(`sickFromDisplay-${id}`, `sickFrom-${id}`);
+  syncDateDisplay(`sickToDisplay-${id}`, `sickTo-${id}`);
+}
+
+function onSickFromChange(id) {
+  const fromEl = document.getElementById(`sickFrom-${id}`);
+  const toEl   = document.getElementById(`sickTo-${id}`);
+  if (!fromEl || !toEl) return;
+  if (!toEl.value || toEl.value < fromEl.value) {
+    toEl.value = fromEl.value;
+  }
+  syncDateDisplay(`sickFromDisplay-${id}`, `sickFrom-${id}`);
+  syncDateDisplay(`sickToDisplay-${id}`, `sickTo-${id}`);
+  recalcSick();
+}
+
+function onSickToChange(id) {
+  const fromEl = document.getElementById(`sickFrom-${id}`);
+  const toEl   = document.getElementById(`sickTo-${id}`);
+  if (!fromEl || !toEl) return;
+  if (toEl.value && fromEl.value && toEl.value < fromEl.value) {
+    toEl.value = fromEl.value;
+  }
+  syncDateDisplay(`sickToDisplay-${id}`, `sickTo-${id}`);
+  recalcSick();
+}
+
+function removeSickRow(id) {
+  const el = document.getElementById(`sickrow-${id}`);
+  if (el) el.remove();
+  recalcSick();
+}
+
+function recalcSick() {
+  const rows = document.getElementById('sickRows')?.children || [];
+  const { workDayRate, weeklyIncome } = gridDailyRate();
+  const year = parseInt(document.getElementById('year')?.value) || new Date().getFullYear();
+
+  let grandTotalDays = 0;
+  let grandTotalLost = 0;
+  let futureWorkDays = 0;
+  let futureLost     = 0;
+  const monthlyLoss  = new Array(13).fill(0);
+
+  Array.from(rows).forEach(row => {
+    const id      = row.id.replace('sickrow-','');
+    const fromEl  = document.getElementById(`sickFrom-${id}`);
+    const toEl    = document.getElementById(`sickTo-${id}`);
+    const daysEl  = document.getElementById(`sickDays-${id}`);
+    const lostEl  = document.getElementById(`sickLost-${id}`);
+
+    const fromStr = fromEl?.value;
+    const toStr   = toEl?.value;
+
+    if (!fromStr || !toStr) {
+      daysEl.textContent = '—'; daysEl.className = 'sick-days empty';
+      lostEl.textContent = '—'; lostEl.className = 'sick-lost empty';
+      return;
+    }
+
+    const [fy,fm,fd] = fromStr.split('-').map(Number);
+    const [ty,tm,td] = toStr.split('-').map(Number);
+    const fromDate   = new Date(fy, fm-1, fd);
+    const toDate     = new Date(ty, tm-1, td);
+
+    if (fromDate > toDate) {
+      daysEl.textContent = '⚠ Invalid'; daysEl.className = 'sick-days';
+      daysEl.style.color = 'var(--error)';
+      lostEl.textContent = '—'; lostEl.className = 'sick-lost empty';
+      return;
+    }
+
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd   = new Date(year, 11, 31);
+    if (toDate < yearStart) {
+      daysEl.textContent = '0 (out of year)'; daysEl.className = 'sick-days empty';
+      lostEl.textContent = eur(0); lostEl.className = 'sick-lost empty';
+      return;
+    }
+
+    const calcFrom = new Date(Math.max(fromDate, yearStart));
+    const calcTo   = toDate;
+    if (calcFrom > calcTo) {
+      daysEl.textContent = '0 (out of year)'; daysEl.className = 'sick-days empty';
+      lostEl.textContent = eur(0); lostEl.className = 'sick-lost empty';
+      return;
+    }
+
+    const workDays   = countWorkingDaysInRange(calcFrom, calcTo);
+    const lostIncome = workDayRate * workDays;
+
+    grandTotalDays += workDays;
+    grandTotalLost += lostIncome;
+
+    daysEl.textContent = workDays + ' work days'; daysEl.className = 'sick-days';
+    daysEl.style.color = 'var(--error)';
+    lostEl.textContent = workDayRate > 0 ? '- ' + eur(lostIncome) : '—';
+    lostEl.className   = 'sick-lost';
+    lostEl.style.color = 'var(--error)';
+
+    const effFrom = new Date(Math.max(fromDate, yearStart));
+    const effTo   = new Date(Math.min(toDate, yearEnd));
+    if (effFrom <= effTo) {
+      for (let m = 1; m <= 12; m++) {
+        monthlyLoss[m] += workDayRate * workingDaysInRangeForMonth(effFrom, effTo, year, m);
+      }
+    }
+
+    if (toDate > yearEnd) {
+      const futureFrom = new Date(Math.max(fromDate, new Date(year + 1, 0, 1)));
+      const futureTo   = toDate;
+      if (futureFrom <= futureTo) {
+        const wdFuture = countWorkingDaysInRange(futureFrom, futureTo);
+        futureWorkDays += wdFuture;
+        futureLost     += workDayRate * wdFuture;
+      }
+    }
+  });
+
+  const totalDaysEl = document.getElementById('sickTotalDays');
+  const totalLostEl = document.getElementById('sickTotalLost');
+  const storeEl     = document.getElementById('sickLossStore');
+  const breakdownEl = document.getElementById('sickMonthBreakdown');
+
+  if (grandTotalDays > 0) {
+    totalDaysEl.textContent = grandTotalDays + ' work days';
+    totalLostEl.textContent = workDayRate > 0 ? '- ' + eur(grandTotalLost) : '(enter income in the monthly grid first)';
+    storeEl.dataset.monthlyLoss = JSON.stringify(monthlyLoss);
+
+    const MONTH_NAMES   = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const startMonth    = parseInt(document.getElementById('startMonth')?.value) || 1;
+    const gridByMonth   = {};
+    document.querySelectorAll('#monthGrid input[type="number"]:not([disabled])').forEach(inp => {
+      const mo = parseInt(inp.dataset.month);
+      gridByMonth[mo] = parseFloat(inp.value) || 0;
+    });
+    let breakdownHTML   = '<strong style="color:var(--text);">Monthly impact:</strong><div style="margin-top:0.4rem;display:flex;flex-wrap:wrap;gap:0.4rem 1rem;">';
+    let anyMonthLoss    = false;
+    for (let m = startMonth; m <= 12; m++) {
+      if (monthlyLoss[m] > 0) {
+        anyMonthLoss = true;
+        const baseIncome = gridByMonth[m] ?? 0;
+        const adjusted = Math.max(0, baseIncome - monthlyLoss[m]);
+        breakdownHTML += `<span><strong style="color:var(--error);">${MONTH_NAMES[m]}</strong>: ${eur(baseIncome)} → <span style="color:var(--success);">${eur(adjusted)}</span> <span style="color:var(--muted);font-size:0.74rem;">(−${eur(monthlyLoss[m])})</span></span>`;
+      }
+    }
+    breakdownHTML += '</div>';
+    if (anyMonthLoss && workDayRate > 0) {
+      breakdownEl.innerHTML    = breakdownHTML;
+      breakdownEl.style.display = 'block';
+    } else if (grandTotalDays > 0 && workDayRate === 0) {
+      breakdownEl.innerHTML    = '<span style="color:var(--muted);">Enter income in the monthly grid above to see monthly impact.</span>';
+      breakdownEl.style.display = 'block';
+    } else {
+      breakdownEl.style.display = 'none';
+    }
+  } else {
+    totalDaysEl.textContent = '—';
+    totalLostEl.textContent = '—';
+    storeEl.dataset.monthlyLoss = 'null';
+    breakdownEl.style.display = 'none';
+  }
+  const warnEl = document.getElementById('sickNextYearWarning');
+  if (warnEl) {
+    if (futureWorkDays > 0) {
+      const estLoss = workDayRate > 0 ? ` (≈ ${eur(futureLost)})` : '';
+      warnEl.innerHTML = `⚠ Includes ${futureWorkDays} work day${futureWorkDays !== 1 ? 's' : ''} after ${year}. This is an estimate using ${year} income and work schedule${estLoss}.`;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+  updateMakeupSuggestion();
+  if (_cs) { _cs.sickLossYearly = grandTotalLost || 0; renderSummary(); }
+}
+
+
+// ──────────────────────────────────────────────────────────
+// MAKEUP LESSON SUGGESTION  (shown when combined days > 12)
+// ──────────────────────────────────────────────────────────
+function updateMakeupSuggestion() {
+  const box     = document.getElementById('makeupSuggestion');
+  const textEl  = document.getElementById('makeupSuggestionText');
+  if (!box || !textEl) return;
+
+  // Count total work-days across both calcs
+  const vacText  = document.getElementById('vacTotalDays')?.textContent || '';
+  const sickText = document.getElementById('sickTotalDays')?.textContent || '';
+  const vacDays  = parseInt(vacText)  || 0;
+  const sickDays = parseInt(sickText) || 0;
+  const total    = vacDays + sickDays;
+
+  if (total < 1) { box.style.display = 'none'; return; }
+
+  // Only show suggestion when total exceeds 12 combined days
+  if (total <= 12) { box.style.display = 'none'; return; }
+
+  const { workDayRate } = gridDailyRate();
+  const totalLoss = (parseFloat(document.getElementById('vacTotalLost')?.textContent?.replace(/[^\d,.-]/g,'').replace(',','.')) || 0)
+                  + (parseFloat(document.getElementById('sickTotalLost')?.textContent?.replace(/[^\d,.-]/g,'').replace(',','.')) || 0);
+
+  // Build suggestion text — total is always > 12 here
+  let parts = [];
+  if (workDayRate > 0 && total > 0) {
+    const monthsExtra   = Math.ceil(total / 4.33);
+    const studentsExtra = Math.ceil(total / 12);
+    parts.push(`You have <strong>${total} missed working day${total !== 1 ? 's' : ''}</strong> across vacation and sick time — more than a full extra teaching month.`);
+    parts.push(`<strong>Option A:</strong> Add <strong>${studentsExtra} extra student${studentsExtra !== 1 ? 's' : ''}</strong>, each attending 1 class per month for the rest of the year, to cover all ${total} days.`);
+    parts.push(`<strong>Option B:</strong> Add <strong>1 extra student per week</strong> for ${monthsExtra} month${monthsExtra !== 1 ? 's' : ''}.`);
+    parts.push(`<strong>Option C:</strong> Schedule <strong>${Math.ceil(total / 4)} makeup sessions per week</strong> for 1 month.`);
+  } else if (total > 0) {
+    parts.push(`You have <strong>${total} missed working day${total !== 1 ? 's' : ''}</strong>. Enter income in the monthly grid to see specific makeup session suggestions.`);
+  }
+
+  if (parts.length) {
+    box.style.display = 'block';
+    textEl.innerHTML = parts.join('<br>');
+  } else {
+    box.style.display = 'none';
+  }
+}
+
 function updateVatNote() {
   const status   = document.getElementById('vatStatus').value;
   const activity = document.getElementById('pauschaleActivity').value;
@@ -3172,8 +4844,11 @@ function updateVatNote() {
   updatePauschaleEligibility();
   updateVatNote();
   updateKindergeldQuestion();
-  addVariationRow(); // start with one empty row
+  addVariationRow();   // Teaching Income Calculator — start with one empty row
+  addEhrenamtRow();    // Ehrenamts Income Calculator — start with one empty row
   onKasseChange(); // initialise Krankenkasse dropdown state
+  updateWorkSchedulePanel();
+  updateDateFormatHints();
 
   yearSel.addEventListener('change', () => { updateYearFigures(); applyStartMonth(); updatePauschaleNote(); updatePauschaleEligibility(); updateKindergeldQuestion(); });
   document.getElementById('startMonth').addEventListener('change', applyStartMonth);
@@ -3181,7 +4856,10 @@ function updateVatNote() {
   document.getElementById('weeklyHours').addEventListener('change', updatePauschaleEligibility);
   document.getElementById('employmentType').addEventListener('change', updatePauschaleEligibility);
   document.getElementById('adminMix').addEventListener('change', updatePauschaleEligibility);
-  document.getElementById('ehrenamtToggle').addEventListener('change', updatePauschaleEligibility);
+  document.getElementById('ehrenamtToggle').addEventListener('change', () => {
+    updatePauschaleEligibility();
+    updateWorkSchedulePanel();
+  });
   document.getElementById('commercialIncome').addEventListener('input', () => {
     updatePauschaleEligibility();
     const val = parseFloat(document.getElementById('commercialIncome').value) || 0;
@@ -3196,6 +4874,116 @@ function updateVatNote() {
   document.getElementById('vatTurnover').addEventListener('input', updateVatNote);
   document.getElementById('pauschaleActivity').addEventListener('change', updateVatNote);
 })();
+</script>
+<!-- ═══════════════════════════════════════════════════════
+     SETTINGS FAB
+════════════════════════════════════════════════════════ -->
+<button id="settingsFab" onclick="toggleSettingsPanel()" title="Settings" aria-label="Settings">⚙</button>
+<div id="settingsPanel">
+  <div>
+    <div class="settings-section-title">🎨 Appearance</div>
+    <div class="settings-row">
+      <button class="settings-btn" id="themeBtn-dark"   onclick="setTheme('dark')">Dark</button>
+      <button class="settings-btn" id="themeBtn-light"  onclick="setTheme('light')">Light</button>
+      <button class="settings-btn" id="themeBtn-system" onclick="setTheme('system')">System</button>
+    </div>
+  </div>
+  <div class="settings-divider"></div>
+  <div>
+    <div class="settings-section-title">🌍 Number &amp; Date Format</div>
+    <div class="settings-row">
+      <button class="settings-btn" id="fmtBtn-de" onclick="setFormat('de')" title="German: 1.234,56 · DD.MM.YYYY">🇩🇪 DE</button>
+      <button class="settings-btn" id="fmtBtn-us" onclick="setFormat('us')" title="US: 1,234.56 · MM/DD/YYYY">🇺🇸 US</button>
+    </div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:0.45rem;line-height:1.5;" id="fmtPreview"></div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────────────────
+// SETTINGS — theme & format functions
+// ──────────────────────────────────────────────────────────
+
+function toggleSettingsPanel() {
+  document.getElementById('settingsPanel').classList.toggle('open');
+}
+// Close panel when clicking outside
+document.addEventListener('click', e => {
+  const panel = document.getElementById('settingsPanel');
+  const fab   = document.getElementById('settingsFab');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== fab) {
+    panel.classList.remove('open');
+  }
+});
+
+function setTheme(t) {
+  _settings.theme = t;
+  localStorage.setItem('ksk_theme', t);
+  applyTheme();
+  updateSettingsUI();
+}
+
+function applyTheme() {
+  const root = document.documentElement;
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = _settings.theme === 'dark' || (_settings.theme === 'system' && prefersDark);
+  root.setAttribute('data-theme', dark ? 'dark' : 'light');
+}
+
+function setFormat(f) {
+  _settings.format = f;
+  localStorage.setItem('ksk_format', f);
+  updateSettingsUI();
+  // Re-render everything that's currently visible
+  if (typeof updateYearFigures === 'function') updateYearFigures();
+  if (typeof updatePauschaleEligibility === 'function') updatePauschaleEligibility();
+  if (typeof updateVatNote === 'function') updateVatNote();
+  if (typeof reformatKasseSelect === 'function') reformatKasseSelect();
+  // If a calculation has been run, re-run it to reformat all results
+  if (typeof calculate === 'function' && document.getElementById('kskResults')?.classList.contains('show')) {
+    _suppressResultScroll = true;
+    calculate();
+    _suppressResultScroll = false;
+  } else if (typeof renderSummary === 'function' && _cs) {
+    renderSummary();
+  }
+  if (typeof recalcVacation === 'function') recalcVacation();
+  if (typeof recalcSick === 'function') recalcSick();
+  if (typeof recalcEhrenamt === 'function') recalcEhrenamt();
+}
+
+function applyFormat() {
+  // Nothing to do structurally — eur() and fmtDate() read _settings.format at call time
+}
+
+function updateSettingsUI() {
+  ['dark','light','system'].forEach(t => {
+    document.getElementById(`themeBtn-${t}`)?.classList.toggle('active', _settings.theme === t);
+  });
+  ['de','us'].forEach(f => {
+    document.getElementById(`fmtBtn-${f}`)?.classList.toggle('active', _settings.format === f);
+  });
+  // Update preview
+  const preview = document.getElementById('fmtPreview');
+  if (preview) {
+    const sample = 1234.56;
+    const numStr = _settings.format === 'de'
+      ? sample.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR'
+      : sample.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR';
+    const dateStr = _settings.format === 'de' ? '31.12.2026' : '12/31/2026';
+    preview.textContent = `e.g. ${numStr} · ${dateStr}`;
+  }
+  if (typeof updateDateFormatHints === 'function') updateDateFormatHints();
+}
+
+// Listen for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (_settings.theme === 'system') applyTheme();
+});
+
+// Init on load
+applyTheme();
+updateSettingsUI();
 </script>
 </body>
 </html>
