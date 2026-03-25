@@ -353,6 +353,18 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: 600;
   }
   .toggle-group button:hover:not(.active) { background: rgba(255,255,255,0.04); }
+  .mini-btn {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.4rem;
+  }
+  .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Calculate button */
   .calc-btn {
@@ -879,6 +891,19 @@ document.addEventListener('DOMContentLoaded', function() {
     user-select: none;
   }
   .work-day.active { border-color: var(--accent); background: rgba(100,210,255,0.07); }
+  .work-day input.work-hours {
+    margin-top: 0.25rem;
+    width: 3.2rem;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.72rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    text-align: center;
+  }
+  .work-day input.work-hours:disabled { opacity: 0.4; }
   @media (max-width: 520px) {
     .vac-col-headers, .sick-col-headers { display: none; }
     .vac-row, .sick-row {
@@ -974,7 +999,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <h1 data-i18n="header_title">KSK Calculator</h1>
     <p data-i18n="header_subtitle">Künstlersozialkasse eligibility &amp; contribution estimator · German freelancers &amp; artists</p>
   </div>
-</header>
+ </header>
+
 
 <!-- ═══════════════════════════════════════════════════════
      CARD 1 · BASIC INFORMATION
@@ -1060,6 +1086,15 @@ document.addEventListener('DOMContentLoaded', function() {
       </select>
       <div class="tip-panel" id="hoursNote" data-i18n-html="tip_hours">
         <strong>Nebenberuflich</strong> means the activity takes up no more than ⅓ of a comparable full-time role — in practice, max. <strong>14 hrs/week averaged over the year</strong>. You do <em>not</em> need another job: students, retirees, unemployed persons, and Hausfrauen/Hausmänner all qualify if the time criterion is met (BMF guidance, §3 Nr. 26).
+      </div>
+    </div>
+    <div class="form-group" id="mainJobHoursGroup">
+      <label><span data-i18n="lbl_main_job_hours">Main job hours per week (if applicable)</span>
+        <button type="button" class="info-btn" onclick="toggleTip('tipMainJobHours')">?</button>
+      </label>
+      <input type="number" id="mainJobHours" min="0" step="0.5" placeholder="e.g. 40" data-i18n-placeholder="ph_main_job_hours" oninput="updateMainJobWarnings()">
+      <div class="tip-panel" id="tipMainJobHours" data-i18n-html="tip_main_job_hours">
+        If you have a main job, enter your average weekly hours. The tool warns if your Übungsleiter/Ehrenamt hours exceed about one third of that time. Leave blank if you have no main job.
       </div>
     </div>
   </div>
@@ -1265,6 +1300,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </button>
             </div>
             <div style="margin-top:0.5rem;display:none;" id="ehrenamtCalcNote"></div>
+            <div id="ehrenamtMainJobWarning" style="display:none;margin-top:0.6rem;font-size:0.8rem;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid var(--warn);background:rgba(245,200,66,0.07);color:var(--warn);"></div>
           </div>
           <!-- Gross input -->
           <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
@@ -1361,6 +1397,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <div id="hoursWarningDetail" style="display:none;margin-top:0.6rem;font-size:0.8rem;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid;"></div>
+    <div id="mainJobHoursWarning" style="display:none;margin-top:0.6rem;font-size:0.8rem;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid var(--warn);background:rgba(245,200,66,0.07);color:var(--warn);"></div>
 
     <div class="tc-apply-bar">
       <button onclick="applyToAllMonths()" id="btnApplyAll" disabled style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;cursor:pointer;opacity:0.4;transition:opacity 0.2s;" data-i18n="apply_all_months">Apply to all months</button>
@@ -1380,6 +1417,42 @@ document.addEventListener('DOMContentLoaded', function() {
     <button onclick="clearAllMonths()" style="background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.85rem;cursor:pointer;" data-i18n="clear_all">Clear</button>
   </div>
   <div class="month-grid" id="monthGrid"></div>
+  <script>
+    (function(){
+      const grid = document.getElementById('monthGrid');
+      if (grid && !grid.querySelector('.month-cell')) {
+        const lang = (typeof _settings !== 'undefined' && _settings.language && _settings.language !== 'system')
+          ? _settings.language
+          : ((navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en');
+        const short = lang === 'de'
+          ? ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"]
+          : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        grid.innerHTML = '';
+        short.forEach((m, i) => {
+          const div = document.createElement('div');
+          div.className = 'month-cell';
+          div.dataset.mi = i + 1;
+          div.innerHTML = `<label>${m}</label>
+            <div class="input-wrap">
+              <input type="number" data-month="${i+1}" value="0" min="0" step="0.01">
+              <span class="eur">EUR</span>
+            </div>`;
+          grid.appendChild(div);
+        });
+      }
+      const activityEl = document.getElementById('pauschaleActivity');
+      const hoursEl = document.getElementById('weeklyHours');
+      const mixedGroup = document.getElementById('mixedSplitGroup');
+      function updateMixedFallback() {
+        if (!activityEl || !mixedGroup) return;
+        const isMixed = activityEl.value === 'mixed' && (!hoursEl || hoursEl.value === 'under14');
+        mixedGroup.classList.toggle('hidden', !isMixed);
+      }
+      if (activityEl) activityEl.addEventListener('change', updateMixedFallback);
+      if (hoursEl) hoursEl.addEventListener('change', updateMixedFallback);
+      updateMixedFallback();
+    })();
+  </script>
 
   <!-- ── Shared Work Schedule ── -->
   <div id="workSchedulePanel" style="display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
@@ -1387,34 +1460,54 @@ document.addEventListener('DOMContentLoaded', function() {
       <span data-i18n="work_schedule_title">📅 Your work schedule</span>
       <span data-i18n="work_schedule_sub" style="font-weight:400;font-size:0.73rem;opacity:0.75;">— used to calculate working-day income loss</span>
     </div>
+    <div class="form-row" style="margin:0 0 0.6rem 0;">
+      <div class="form-group" style="margin:0;">
+        <label data-i18n="lbl_work_hourly_rate">Hourly rate (EUR)</label>
+        <div class="input-wrap">
+          <input type="number" id="workHourlyRate" min="0" step="0.01" placeholder="e.g. 35" data-i18n-placeholder="ph_work_hourly_rate" oninput="recalcBoth()">
+          <span class="eur">EUR</span>
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label data-i18n="lbl_work_hours_day">Hours worked per day</label>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:0.1rem;" data-i18n="work_schedule_hours_hint">Set hours below on each day</div>
+      </div>
+    </div>
     <div class="work-schedule" id="workSchedule">
       <div class="work-day active" id="wdLabel-1" onclick="toggleWorkDay(1)">
         <input type="checkbox" id="wd-1" checked style="display:none;">
-        Mon
+        <div>Mon</div>
+        <input class="work-hours" type="number" id="wdHours-1" min="0" step="0.25" placeholder="hrs" oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
       <div class="work-day active" id="wdLabel-2" onclick="toggleWorkDay(2)">
         <input type="checkbox" id="wd-2" checked style="display:none;">
-        Tue
+        <div>Tue</div>
+        <input class="work-hours" type="number" id="wdHours-2" min="0" step="0.25" placeholder="hrs" oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
       <div class="work-day active" id="wdLabel-3" onclick="toggleWorkDay(3)">
         <input type="checkbox" id="wd-3" checked style="display:none;">
-        Wed
+        <div>Wed</div>
+        <input class="work-hours" type="number" id="wdHours-3" min="0" step="0.25" placeholder="hrs" oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
       <div class="work-day active" id="wdLabel-4" onclick="toggleWorkDay(4)">
         <input type="checkbox" id="wd-4" checked style="display:none;">
-        Thu
+        <div>Thu</div>
+        <input class="work-hours" type="number" id="wdHours-4" min="0" step="0.25" placeholder="hrs" oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
       <div class="work-day active" id="wdLabel-5" onclick="toggleWorkDay(5)">
         <input type="checkbox" id="wd-5" checked style="display:none;">
-        Fri
+        <div>Fri</div>
+        <input class="work-hours" type="number" id="wdHours-5" min="0" step="0.25" placeholder="hrs" oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
       <div class="work-day" id="wdLabel-6" onclick="toggleWorkDay(6)">
         <input type="checkbox" id="wd-6" style="display:none;">
-        Sat
+        <div>Sat</div>
+        <input class="work-hours" type="number" id="wdHours-6" min="0" step="0.25" placeholder="hrs" disabled oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
       <div class="work-day" id="wdLabel-0" onclick="toggleWorkDay(0)">
         <input type="checkbox" id="wd-0" style="display:none;">
-        Sun
+        <div>Sun</div>
+        <input class="work-hours" type="number" id="wdHours-0" min="0" step="0.25" placeholder="hrs" disabled oninput="recalcBoth()" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
       </div>
     </div>
   </div>
@@ -1628,6 +1721,20 @@ document.addEventListener('DOMContentLoaded', function() {
         · The commercial portion of a mixed §3 Nr. 26 activity — that is handled automatically via the "commercial income" field in Card 1 when Mixed is selected<br>
         · Tax-free income (e.g. the §3 Nr. 26 exempt portion itself)<br>
         · <strong>Flat-taxed Minijobs (2% Pauschalsteuer)</strong> — these are settled entirely by the employer and do not appear in your Steuererklärung at all
+      </div>
+    </div>
+    <div class="form-group">
+      <label>
+        <span data-i18n="lbl_charity">Charitable giving (donations) per year</span>
+        <button type="button" class="info-btn" onclick="toggleTip('tipCharity')">?</button>
+      </label>
+      <div class="input-wrap">
+        <input type="number" id="charityGiving" value="0" min="0" step="0.01" placeholder="e.g. 200" data-i18n-placeholder="ph_charity">
+        <span class="eur">EUR</span>
+      </div>
+      <button type="button" class="mini-btn" onclick="applyCharityUpdate()" data-i18n="btn_update">Update</button>
+      <div class="tip-panel" id="tipCharity" data-i18n-html="tip_charity">
+        Charitable donations can be deducted as Sonderausgaben up to 20% of total income, or 4‰ of turnover + wages (whichever is higher). Excess can be carried forward. Use only for eligible organisations with a donation receipt.
       </div>
     </div>
     <div class="form-group" id="minijobCheckGroup" style="display:none;">
@@ -1855,8 +1962,8 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
           <div class="row" id="ntVacToggleRow" style="display:none;">
             <span class="lbl">
-              <button type="button" id="ntVacToggleBtn" onclick="toggleAddback('vac')"
-                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--warn);background:var(--warn);color:#000;cursor:pointer;margin-right:0.4rem;" data-i18n="btn_remove">Remove</button>
+              <button type="button" id="ntVacToggleBtn" onclick="toggleLossInclude('vac')"
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--warn);background:var(--warn);color:#000;cursor:pointer;margin-right:0.4rem;" data-i18n="btn_exclude">Exclude</button>
               <span data-i18n="net_addback_vac_loss">🏖 Vacation income loss</span>
               <span id="ntVacMakeupWrap" style="display:inline-block;position:relative;margin-left:0.35rem;vertical-align:middle;">
                 <button type="button" class="makeup-tip-btn warn-tip-btn"
@@ -1868,8 +1975,8 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
           <div class="row" id="ntSickToggleRow" style="display:none;">
             <span class="lbl">
-              <button type="button" id="ntSickToggleBtn" onclick="toggleAddback('sick')"
-                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--error);background:var(--error);color:#fff;cursor:pointer;margin-right:0.4rem;" data-i18n="btn_remove">Remove</button>
+              <button type="button" id="ntSickToggleBtn" onclick="toggleLossInclude('sick')"
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--error);background:var(--error);color:#fff;cursor:pointer;margin-right:0.4rem;" data-i18n="btn_exclude">Exclude</button>
               <span data-i18n="net_addback_sick_loss">🤒 Sick day income loss</span>
               <span id="ntSickMakeupWrap" style="display:inline-block;position:relative;margin-left:0.35rem;vertical-align:middle;">
                 <button type="button" class="makeup-tip-btn error-tip-btn"
@@ -1879,9 +1986,19 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
             <span class="val" id="ntSickLoss" style="color:var(--error);">–</span>
           </div>
+          <div class="row" id="ntCharityToggleRow" style="display:none;">
+            <span class="lbl">
+              <button type="button" id="ntCharityToggleBtn" onclick="toggleCharityInclude()"
+                style="font-size:0.72rem;padding:0.1rem 0.5rem;border-radius:3px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;margin-right:0.4rem;" data-i18n="btn_exclude">Exclude</button>
+              <span data-i18n="net_deduct_charity">Charitable giving (Sonderausgaben)</span>
+            </span>
+            <span class="val" id="ntCharityDeduct" style="color:var(--muted);">–</span>
+          </div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;justify-content:center;padding-left:1rem;">
+        <div class="breakdown-title" id="ntYearlyGrossLabel" data-i18n="net_row_yearly_gross" style="display:none;">Yearly gross</div>
+        <div class="netto-big" id="ntYearlyGross" style="display:none;">–</div>
         <div class="breakdown-title" id="ntTakeHomeLabel" data-i18n="net_takehome_monthly">Monthly take-home</div>
         <div class="netto-big" id="ntTakeHome">–</div>
       </div>
@@ -1979,12 +2096,46 @@ const I18N = {
     settings_appearance: '🎨 Appearance',
     settings_language: '🌐 Language',
     settings_format: '🌍 Number & Date Format',
+    settings_exports: '📄 Exports',
     theme_dark: 'Dark',
     theme_light: 'Light',
     theme_system: 'System',
     lang_en: 'English',
     lang_de: 'Deutsch',
     lang_system: 'System',
+    export_pdf: 'Export PDF',
+    export_excel: 'Export Excel',
+    export_title: 'KSK Statement',
+    export_subtitle: 'Summary of your results',
+    export_statement_date: 'Statement date',
+    export_section_summary: 'Summary',
+    export_section_income: 'Income & Deductions',
+    export_section_deductions: 'Taxes & Contributions',
+    export_section_ksk: 'KSK Eligibility',
+    export_year_label: 'Tax year',
+    export_eligible_months: 'Eligible months',
+    export_total_gross: 'Yearly gross',
+    export_total_deductions: 'Total deductions',
+    export_yearly_takehome: 'Yearly take-home',
+    net_row_monthly_gross: 'Monthly gross',
+    export_taxable_profit: 'Taxable freelance profit',
+    export_status: 'Status',
+    export_ksk_limit: 'Pro-rated KSK limit',
+    export_avg_monthly_profit: 'Avg monthly profit',
+    export_qualifying_income: 'Qualifying income (§3 Nr. 26 activity)',
+    export_commercial_income: 'Commercial income (not §3 Nr. 26 exempt)',
+    export_ehrenamt_income: 'Ehrenamt income (§3 Nr. 26a)',
+    export_pauschale_deduct: 'Übungsleiterpauschale (deducted)',
+    export_ehrenamt_deduct: 'Ehrenamtspauschale (deducted)',
+    export_business_expenses: 'Business expenses (deducted)',
+    export_charity_deduct: 'Charitable giving (deducted)',
+    export_ksk_contrib: 'KSK contributions',
+    export_income_tax: 'Income tax (ESt)',
+    export_soli: 'Solidarity surcharge',
+    export_church: 'Church tax',
+    export_col_label: 'Label',
+    export_col_value: 'Value',
+    export_footer_note: 'Generated by the KSK Calculator. Figures are estimates for planning only.',
     btn_calc: '▶ Calculate KSK Status & Full Breakdown',
     lbl_tax_year: 'Tax Year',
     lbl_start_month: 'Start month (first month working)',
@@ -1994,6 +2145,9 @@ const I18N = {
     opt_activity_mixed: 'Mixed – some qualifying, some commercial',
     lbl_commercial_income: 'Commercial income within this activity (EUR/yr)',
     lbl_weekly_hours: 'Average weekly hours on this activity',
+    lbl_main_job_hours: 'Main job hours per week (for Ehrenamtspauschale/Übungsleiterpauschale)',
+    ph_main_job_hours: 'e.g. 40',
+    tip_main_job_hours: 'If you have a main job, enter your average weekly hours. This check is time‑based (not money‑based): each activity is assessed separately against the 1/3 rule, and similar activities can be combined. The tool warns if your Übungsleiter/Ehrenamt hours exceed about one third of your main‑job hours. Leave blank if you have no main job. Time is generally assessed over the calendar year; for short contracts, the shorter period can be decisive.',
     opt_hours_under14: 'Under 14 hrs/week (nebenberuflich ✓)',
     opt_hours_over14: '14 hrs/week or more (may not qualify)',
     lbl_paid_how: 'How are you paid for this activity?',
@@ -2033,6 +2187,7 @@ const I18N = {
     apply_future_months: 'Future months only',
     btn_vacation_toggle: '🏖 Vacation',
     btn_sick_toggle: '🤒 Sick days',
+    btn_update: 'Update',
     fill_manual: 'Or fill manually:',
     fill_all: 'Fill all',
     clear_all: 'Clear',
@@ -2052,6 +2207,10 @@ const I18N = {
     lbl_children: 'Children (for Kinderfreibetrag / PV)',
     lbl_kindergeld: 'Do you receive Kindergeld?',
     lbl_other_income: 'Your other yearly income (salary, etc.)',
+    lbl_charity: 'Charitable giving (donations) per year',
+    ph_charity: 'e.g. 200',
+    tip_charity: 'Donations to eligible organisations can be deducted as Sonderausgaben. The legal cap is 20% of total income or 4‰ of turnover + wages (whichever is higher); excess can be carried forward. This calculator applies the 20% cap because turnover/wages are not captured here. Donation receipt required.',
+    charity_cap_note: '(cap this year: {cap} · 20% of {base})',
     lbl_minijob_type: 'Minijob taxation type',
     lbl_spouse_tax_class: 'Spouse tax class',
     lbl_spouse_income: 'Spouse yearly gross income',
@@ -2086,16 +2245,18 @@ const I18N = {
     contract_item_6: 'Time commitment documented as ≤ ⅓ of a comparable full-time role (~14 hrs/wk)',
     contract_item_7: 'Separate contract exists for §3 Nr. 26a Ehrenamts role (different from §3 Nr. 26 teaching role)',
     contract_note: '⚠ This tool does not verify your contract. A missing or incomplete contract may result in the Finanzamt disallowing the Pauschale on audit.',
-    tip_activity: '§3 Nr. 26 EStG exempts up to <strong><span id="pauschaleNote">3,300</span> EUR/yr</strong> from tax and social contributions — claimed in your <em>Steuererklärung</em>, not a special invoicing method. Applies to teaching, coaching, caregiving, or artistic work for non-profit associations, churches, municipalities, or public-law bodies.',
+    tip_activity: '§3 Nr. 26 EStG exempts up to <strong><span id="pauschaleNote">3,300</span> EUR/yr</strong> from tax and social contributions — claimed in your <em>Steuererklärung</em>, not a special invoicing method. It is a tax‑free expense allowance; amounts above the limit are taxable income. Applies to teaching, coaching, caregiving, or artistic work (e.g., music instruction/choir leading) for non-profit associations, churches, municipalities, or public-law bodies.',
     tip_mixed_split: '<strong>Mixed activity — commercial income</strong><br><br>Enter commercial income that is <strong>not already in the monthly income grid</strong> (Card 2). The grid should contain your qualifying §3 Nr. 26 income only (invoiced to non-profit / public bodies).<br><br>The §3 Nr. 26 Pauschale is applied in full against the grid income. The commercial amount you enter here is added directly on top as fully taxable — it is never offset by the Pauschale.<br><br><strong>Example:</strong> Grid = €6,216 from a non-profit choir. You also earn €75 from private lessons (commercial). Enter €75 here.<br>Result: (€6,216 − €3,300) + €75 = <strong>€2,991 taxable profit</strong>.',
-    tip_hours: '<strong>Nebenberuflich</strong> means the activity takes up no more than ⅓ of a comparable full-time role — in practice, max. <strong>14 hrs/week averaged over the year</strong>. You do <em>not</em> need another job: students, retirees, unemployed persons, and Hausfrauen/Hausmänner all qualify if the time criterion is met (BMF guidance, §3 Nr. 26).',
+    tip_hours: '<strong>Nebenberuflich</strong> means the activity takes up no more than ⅓ of a comparable full-time role — in practice, typically <strong>about 11–14 hrs/week averaged over the year</strong>. You do <em>not</em> need another job: students, retirees, unemployed persons, and Hausfrauen/Hausmänner all qualify if the time criterion is met (BMF guidance, §3 Nr. 26).',
+    main_job_over_warn: '⚠ Time rule: your Übungsleiter activity is about {hours} hrs/week, which exceeds one third of your main job ({main} hrs/week). This may be treated as not <em>nebenberuflich</em>.',
+    eh_main_job_over_warn: '⚠ Time rule: your Ehrenamt activity is about {hours} hrs/week, which exceeds one third of your main job ({main} hrs/week). This may be treated as not <em>nebenberuflich</em>.',
     warn_vereins_cap: '⚠️ <strong style="color:var(--text);">Annual per-person limits — not per organisation.</strong> The <strong><span id="vereinsPauschaleAmt">3.300</span> EUR Übungsleiterpauschale</strong> and <strong><span id="vereinsEhrenamtAmt">960</span> EUR Ehrenamtspauschale</strong> are capped once per person per year, regardless of how many non-profit organisations you work for. If you coach three choirs, you still only get one <span id="vereinsPauschaleAmt2">3.300</span> EUR deduction total — not 3 × <span id="vereinsPauschaleAmt3">3.300</span> EUR. <strong>Enter your total combined qualifying income from all Vereine in the monthly grid above.</strong>',
     tip_anlage: '<strong>Anlage N vs. Anlage S — where to report in your Steuererklärung</strong><br><br>· <strong>Anlage S</strong> (Selbstständige): You invoice the organisation, handle your own taxes, and are legally self-employed. Most freelance Übungsleiter fall here.<br>· <strong>Anlage N</strong> (Arbeitnehmer): The organisation pays you as an employee via payroll (Lohnabrechnung) and withholds Lohnsteuer. You receive a Lohnsteuerbescheinigung.<br><br>In both cases the §3 Nr. 26 Pauschale applies in the same way — it is claimed as a deduction in the respective Anlage. The distinction only affects where on the tax return it appears, not the amount.',
     tip_admin_mix: '<strong>Administrative tasks do not qualify for §3 Nr. 26</strong><br><br>The Pauschale applies only to hands-on pedagogical, artistic, sports-coaching, or caring activities. The following tasks <strong>do not qualify</strong> — even if performed for a non-profit:<br><br>· Scheduling, timetabling, booking rooms<br>· Bookkeeping, financial administration<br>· Managing or supervising other coaches/employees<br>· Pure organisational/event-planning work<br><br>If your role mixes qualifying and non-qualifying tasks, only the portion genuinely spent on qualifying work is eligible. Split your income accordingly using the Commercial income field (Mixed activity type).',
     tip_vat: '<strong>Umsatzsteuer — When do you need to charge VAT?</strong><br><br><strong>Kleinunternehmerregelung (§19 UStG)</strong> — You pay <em>no VAT</em> if your gross turnover was <strong>≤ €22,000</strong> in the prior year and will be <strong>≤ €50,000</strong> in the current year (2024 law: limits raised from €17,500/€50,000). You must state "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet." on invoices.<br><br><strong>§4 UStG full exemptions</strong> — Certain activities are <em>always</em> VAT-free regardless of turnover:<br>· Teaching at schools/universities or state-recognised educational bodies<br>· Private tutoring directly from a teacher (§4 Nr. 21b)<br>· Healthcare professionals (doctors, therapists, etc.) — §4 Nr. 14<br>· Certain cultural organisations — §4 Nr. 20<br><br><strong>Regelbesteuerung</strong> — If you exceed the Kleinunternehmer limits, or opt out voluntarily (Verzicht), you charge <strong>19% VAT</strong> (7% for books, some cultural services) and file quarterly/annual Umsatzsteuervoranmeldung.<br><br><em>Note: KSK and income tax are calculated on net income before VAT. VAT is not shown in this calculator\'s deduction summary.</em>',
     tip_vat_turnover: 'Used to assess your Kleinunternehmer eligibility. Does not affect tax/KSK calculations.',
     tip_expenses: 'Equipment, software, travel, materials etc. beyond any Pauschale deduction.',
-    tip_ehrenamt: '<strong>Ehrenamtspauschale (§3 Nr. 26a EStG) — <span id="ehrenamtAmt1">960</span> EUR/yr</strong><br><br>A separate allowance of <strong><span id="ehrenamtAmt2">960</span> EUR/year</strong> for honorary/volunteer roles such as:<br>· Board member (Vorstandsmitglied) of a non-profit<br>· Treasurer (Kassenwart) or secretary<br>· Administrative volunteer for a charity or association<br><br><strong>Stackable with the Übungsleiterpauschale</strong>, but only when the two roles are <em>genuinely separate</em> — different activities, documented in separate contracts. You cannot split one role across both allowances.<br><br>Like the Übungsleiterpauschale, the Ehrenamtspauschale is claimed in your <em>Steuererklärung</em> and requires the organisation to be a non-profit, church, municipality, or public-law body. It reduces your taxable income by an additional <span id="ehrenamtAmt3">960</span> EUR.',
+    tip_ehrenamt: '<strong>Ehrenamtspauschale (§3 Nr. 26a EStG) — <span id="ehrenamtAmt1">960</span> EUR/yr</strong><br><br>A separate allowance of <strong><span id="ehrenamtAmt2">960</span> EUR/year</strong> for honorary/volunteer roles such as:<br>· Board member (Vorstandsmitglied) of a non-profit<br>· Treasurer (Kassenwart) or secretary<br>· Administrative volunteer for a charity or association<br><br>This is a tax‑free expense allowance; amounts above the limit are taxable income.<br><br><strong>Nebenberuflich</strong> also matters here: Finanzamt practice looks at the time spent — generally no more than about a third of your main‑job time (rule of thumb ~11–14 hrs/week).<br><br><strong>Stackable with the Übungsleiterpauschale</strong>, but only when the two roles are <em>genuinely separate</em> — different activities, documented in separate contracts. You cannot split one role across both allowances, and the honorary role must be separate from your main professional activity.<br><br>Like the Übungsleiterpauschale, the Ehrenamtspauschale is claimed in your <em>Steuererklärung</em> and requires the organisation to be a non-profit, church, municipality, or public-law body. It reduces your taxable income by an additional <span id="ehrenamtAmt3">960</span> EUR.',
     tip_kindergeld: '<strong>Kindergeld vs. Kinderfreibetrag (Günstigerprüfung)</strong><br><br>The Finanzamt automatically compares both options and applies whichever saves you more tax:<br><br>· <strong>Kindergeld</strong> (cash benefit, §66 EStG): paid monthly regardless of income — <span id="kgRateHint">–</span>/mo in <span id="kgYearHint">–</span> per child.<br>· <strong>Kinderfreibetrag</strong> (§32 Abs.6 EStG): deducted from your taxable income. Only beneficial if the resulting ESt saving <em>exceeds</em> the Kindergeld you would receive.<br><br>At lower incomes Kindergeld is almost always more favourable. The KFB only wins above roughly €70,000–€80,000 taxable income. This calculator performs the Günstigerprüfung automatically.',
     tip_other_income: '<strong>What belongs here — and what doesn\'t</strong><br><br>This field is for income that is <strong>entirely separate</strong> from the freelance activity entered in the monthly income grid above. It is added to your taxable base for Einkommensteuer purposes.<br><br><strong>Include here:</strong><br>· Employment salary (Arbeitslohn) from an employer<br>· Rental income (Einkünfte aus Vermietung)<br>· Capital income above Sparerpauschbetrag (Zinsen, Dividenden)<br>· Other self-employment income from a <em>different</em> activity<br>· Minijob income — <em>only</em> if you opted into individual taxation (Regelversteuerung). Include the gross amount.<br><br><strong>Do not include here:</strong><br>· Income already entered in the monthly grid (Cards 1–2)<br>· The commercial portion of a mixed §3 Nr. 26 activity — that is handled automatically via the "commercial income" field in Card 1 when Mixed is selected<br>· Tax-free income (e.g. the §3 Nr. 26 exempt portion itself)<br>· <strong>Flat-taxed Minijobs (2% Pauschalsteuer)</strong> — these are settled entirely by the employer and do not appear in your Steuererklärung at all',
     minijob_flat_html: '<strong>Flat-taxed (2% Pauschalsteuer)</strong><br><span style="color:var(--muted);font-size:0.78rem;">Employer settles tax & social contributions — not in your Steuererklärung. This income is <strong>tax-free for you</strong> and excluded from your ESt calculation.</span>',
@@ -2118,6 +2279,11 @@ const I18N = {
     total_income_lost: 'Total income lost:',
     work_schedule_title: '📅 Your work schedule',
     work_schedule_sub: '— used to calculate working-day income loss',
+    work_schedule_hours_hint: 'Set hours below on each day',
+    lbl_work_hourly_rate: 'Hourly rate (EUR)',
+    lbl_work_hours_day: 'Hours worked per day',
+    ph_work_hourly_rate: 'e.g. 35',
+    ph_work_hours_day: 'e.g. 4',
     ehrenamt_schedule_title: '🤝 Ehrenamts work schedule',
     ehrenamt_schedule_sub: '— used to calculate working-day income loss for Ehrenamts',
     page_title: 'KSK Calculator 2026',
@@ -2198,6 +2364,7 @@ const I18N = {
     net_row_church: 'Church tax',
     net_row_total_deduct: 'Total deductions',
     net_row_eff_rate: 'Effective rate',
+    net_row_yearly_gross: 'Yearly gross',
     net_addback_title: 'Additional household income:',
     btn_remove: 'Remove',
     btn_include: 'Include',
@@ -2205,7 +2372,10 @@ const I18N = {
     net_addback_kindergeld: 'Kindergeld',
     net_addback_vac_loss: '🏖 Vacation income loss',
     net_addback_sick_loss: '🤒 Sick day income loss',
+    net_deduct_charity: 'Charitable giving (Sonderausgaben)',
     net_takehome_monthly: 'Monthly take-home',
+    btn_exclude: 'Exclude',
+    excluded_label: 'Excluded',
     result_status_label: 'Status',
     result_breakdown_title: 'Calculation Breakdown',
     result_row_total_gross: 'Total gross income',
@@ -2281,7 +2451,7 @@ const I18N = {
     vat_klein_qualified_note: 'Note: your §3 Nr. 26 qualified activity may also qualify for §4 Nr. 21/22 UStG exemption — check with your Finanzamt whether VAT registration is needed at all.',
     vat_regel: 'Regelbesteuerung: charge 19% VAT on standard services (7% on books, some cultural services). File monthly or quarterly Umsatzsteuervoranmeldung (Elster). Keep input tax (Vorsteuer) records for deduction.',
     enter_income_first: '(enter income in the monthly grid first)',
-    monthly_impact_label: 'Monthly impact:',
+    monthly_impact_label: 'Overall Impact:',
     monthly_impact_need_income: 'Enter income in the monthly grid above to see monthly impact.',
     next_year_warning: '⚠ Includes {days} {dayLabel} after {year}. This is an estimate using {year} income and work schedule{estLoss}.',
     next_year_est_loss: ' (≈ {amount})',
@@ -2436,12 +2606,46 @@ const I18N = {
     settings_appearance: '🎨 Darstellung',
     settings_language: '🌐 Sprache',
     settings_format: '🌍 Zahlen‑ & Datumsformat',
+    settings_exports: '📄 Exporte',
     theme_dark: 'Dunkel',
     theme_light: 'Hell',
     theme_system: 'System',
     lang_en: 'English',
     lang_de: 'Deutsch',
     lang_system: 'System',
+    export_pdf: 'PDF exportieren',
+    export_excel: 'Excel exportieren',
+    export_title: 'KSK‑Auszug',
+    export_subtitle: 'Zusammenfassung Ihrer Ergebnisse',
+    export_statement_date: 'Auszugsdatum',
+    export_section_summary: 'Zusammenfassung',
+    export_section_income: 'Einnahmen & Abzüge',
+    export_section_deductions: 'Steuern & Beiträge',
+    export_section_ksk: 'KSK‑Prüfung',
+    export_year_label: 'Steuerjahr',
+    export_eligible_months: 'Anspruchsmonate',
+    export_total_gross: 'Jahresbrutto',
+    export_total_deductions: 'Gesamtabzüge',
+    export_yearly_takehome: 'Jahres‑Netto',
+    net_row_monthly_gross: 'Monatsbrutto',
+    export_taxable_profit: 'Zu versteuernder Gewinn',
+    export_status: 'Status',
+    export_ksk_limit: 'Anteiliges KSK‑Limit',
+    export_avg_monthly_profit: 'Ø Monatsgewinn',
+    export_qualifying_income: 'Begünstigte Einnahmen (§3 Nr. 26)',
+    export_commercial_income: 'Gewerbliche Einnahmen (nicht §3 Nr. 26)',
+    export_ehrenamt_income: 'Ehrenamt‑Einnahmen (§3 Nr. 26a)',
+    export_pauschale_deduct: 'Übungsleiterpauschale (abgezogen)',
+    export_ehrenamt_deduct: 'Ehrenamtspauschale (abgezogen)',
+    export_business_expenses: 'Betriebsausgaben (abgezogen)',
+    export_charity_deduct: 'Spenden (abgezogen)',
+    export_ksk_contrib: 'KSK‑Beiträge',
+    export_income_tax: 'Einkommensteuer',
+    export_soli: 'Solidaritätszuschlag',
+    export_church: 'Kirchensteuer',
+    export_col_label: 'Bezeichnung',
+    export_col_value: 'Wert',
+    export_footer_note: 'Erstellt vom KSK‑Rechner. Alle Werte sind Schätzungen für die Planung.',
     btn_calc: '▶ KSK‑Status & vollständige Übersicht berechnen',
     lbl_tax_year: 'Steuerjahr',
     lbl_start_month: 'Startmonat (erster Arbeitsmonat)',
@@ -2451,6 +2655,9 @@ const I18N = {
     opt_activity_mixed: 'Gemischt – teils begünstigt, teils kommerziell',
     lbl_commercial_income: 'Kommerzielles Einkommen in dieser Tätigkeit (EUR/Jahr)',
     lbl_weekly_hours: 'Durchschnittliche Wochenstunden für diese Tätigkeit',
+    lbl_main_job_hours: 'Haupttätigkeit – Wochenstunden (für Ehrenamtspauschale/Übungsleiterpauschale)',
+    ph_main_job_hours: 'z. B. 40',
+    tip_main_job_hours: 'Wenn Sie eine Haupttätigkeit haben, tragen Sie die durchschnittlichen Wochenstunden ein. Die Prüfung ist zeitbasiert (nicht betragsbasiert): Jede Tätigkeit wird separat an der 1/3‑Regel gemessen, gleichartige Tätigkeiten können zusammengefasst werden. Das Tool warnt, wenn Übungsleiter-/Ehrenamtstunden mehr als etwa ein Drittel Ihrer Haupttätigkeit betragen. Leer lassen, wenn keine Haupttätigkeit vorhanden ist. Die Zeit wird in der Regel über das Kalenderjahr betrachtet; bei kurzen Verträgen kann der kürzere Zeitraum entscheidend sein.',
     opt_hours_under14: 'Unter 14 Std./Woche (nebenberuflich ✓)',
     opt_hours_over14: '14 Std./Woche oder mehr (ggf. nicht begünstigt)',
     lbl_paid_how: 'Wie werden Sie für diese Tätigkeit bezahlt?',
@@ -2490,6 +2697,7 @@ const I18N = {
     apply_future_months: 'Nur zukünftige Monate',
     btn_vacation_toggle: '🏖 Urlaub',
     btn_sick_toggle: '🤒 Kranktage',
+    btn_update: 'Aktualisieren',
     fill_manual: 'Oder manuell ausfüllen:',
     fill_all: 'Alle füllen',
     clear_all: 'Leeren',
@@ -2509,6 +2717,10 @@ const I18N = {
     lbl_children: 'Kinder (für Kinderfreibetrag / PV)',
     lbl_kindergeld: 'Erhalten Sie Kindergeld?',
     lbl_other_income: 'Sonstige jährliche Einkünfte (Gehalt usw.)',
+    lbl_charity: 'Spenden pro Jahr (gemeinnützige Zwecke)',
+    ph_charity: 'z. B. 200',
+    tip_charity: 'Spenden an begünstigte Organisationen sind als Sonderausgaben absetzbar. Die gesetzliche Grenze beträgt 20% des Gesamtbetrags der Einkünfte oder 4‰ der Umsätze + Löhne (je nachdem, was höher ist); Überschüsse können vorgetragen werden. Dieser Rechner nutzt die 20%-Grenze, da Umsätze/Löhne hier nicht separat erfasst werden. Zuwendungsbestätigung erforderlich.',
+    charity_cap_note: '(Grenze dieses Jahr: {cap} · 20% von {base})',
     lbl_minijob_type: 'Minijob‑Besteuerung',
     lbl_spouse_tax_class: 'Steuerklasse des Ehepartners',
     lbl_spouse_income: 'Jährliches Bruttoeinkommen des Ehepartners',
@@ -2543,16 +2755,18 @@ const I18N = {
     contract_item_6: 'Zeitaufwand dokumentiert als ≤ ⅓ einer vergleichbaren Vollzeitstelle (~14 Std./Woche)',
     contract_item_7: 'Separater Vertrag für §3 Nr. 26a‑Ehrenamt (anders als §3 Nr. 26‑Lehrtätigkeit) liegt vor',
     contract_note: '⚠ Dieses Tool prüft Ihren Vertrag nicht. Ein fehlender oder unvollständiger Vertrag kann dazu führen, dass das Finanzamt die Pauschale bei einer Prüfung nicht anerkennt.',
-    tip_activity: '§3 Nr. 26 EStG stellt bis zu <strong><span id="pauschaleNote">3,300</span> EUR/Jahr</strong> von Steuer und Sozialabgaben frei — geltend zu machen in der <em>Steuererklärung</em>, kein spezielles Abrechnungsverfahren. Gilt für Unterricht, Coaching, Betreuung oder künstlerische Arbeit für gemeinnützige Vereine, Kirchen, Kommunen oder Körperschaften des öffentlichen Rechts.',
+    tip_activity: '§3 Nr. 26 EStG stellt bis zu <strong><span id="pauschaleNote">3,300</span> EUR/Jahr</strong> von Steuer und Sozialabgaben frei — geltend zu machen in der <em>Steuererklärung</em>, kein spezielles Abrechnungsverfahren. Es handelt sich um eine steuerfreie Aufwandsentschädigung; Beträge oberhalb der Grenze sind steuerpflichtiges Einkommen. Gilt für Unterricht, Coaching, Betreuung oder künstlerische Arbeit (z. B. Musikunterricht/Chorleitung) für gemeinnützige Vereine, Kirchen, Kommunen oder Körperschaften des öffentlichen Rechts.',
     tip_mixed_split: '<strong>Gemischte Tätigkeit — kommerzielles Einkommen</strong><br><br>Hier tragen Sie kommerzielle Einnahmen ein, die <strong>nicht bereits im monatlichen Einkommensraster</strong> (Karte 2) enthalten sind. Das Raster soll ausschließlich die begünstigten §3 Nr. 26‑Einkünfte enthalten (Rechnungen an gemeinnützige / öffentliche Träger).<br><br>Die §3 Nr. 26‑Pauschale wird vollständig auf das Raster‑Einkommen angewendet. Der hier eingegebene kommerzielle Betrag wird vollständig steuerpflichtig hinzugerechnet — er wird niemals durch die Pauschale gemindert.<br><br><strong>Beispiel:</strong> Raster = 6.216 € aus einem gemeinnützigen Chor. Zusätzlich 75 € aus Privatunterricht (kommerziell). Tragen Sie 75 € hier ein.<br>Ergebnis: (6.216 € − 3.300 €) + 75 € = <strong>2.991 € zu versteuernder Gewinn</strong>.',
-    tip_hours: '<strong>Nebenberuflich</strong> bedeutet: nicht mehr als ⅓ einer vergleichbaren Vollzeittätigkeit — praktisch max. <strong>14 Std./Woche im Jahresdurchschnitt</strong>. Eine weitere Tätigkeit ist <em>nicht</em> erforderlich: Studierende, Rentner, Arbeitslose sowie Hausfrauen/Hausmänner erfüllen das Kriterium, sofern die Zeitgrenze eingehalten wird (BMF‑Hinweise, §3 Nr. 26).',
+    tip_hours: '<strong>Nebenberuflich</strong> bedeutet: nicht mehr als ⅓ einer vergleichbaren Vollzeittätigkeit — praktisch typischerweise <strong>etwa 11–14 Std./Woche im Jahresdurchschnitt</strong>. Eine weitere Tätigkeit ist <em>nicht</em> erforderlich: Studierende, Rentner, Arbeitslose sowie Hausfrauen/Hausmänner erfüllen das Kriterium, sofern die Zeitgrenze eingehalten wird (BMF‑Hinweise, §3 Nr. 26).',
+    main_job_over_warn: '⚠ Zeitregel: Ihre Übungsleiter‑Tätigkeit liegt bei ca. {hours} Std./Woche und überschreitet ein Drittel Ihrer Haupttätigkeit ({main} Std./Woche). Dies kann als nicht <em>nebenberuflich</em> gewertet werden.',
+    eh_main_job_over_warn: '⚠ Zeitregel: Ihr Ehrenamt liegt bei ca. {hours} Std./Woche und überschreitet ein Drittel Ihrer Haupttätigkeit ({main} Std./Woche). Dies kann als nicht <em>nebenberuflich</em> gewertet werden.',
     warn_vereins_cap: '⚠️ <strong style="color:var(--text);">Jahresgrenzen pro Person — nicht pro Organisation.</strong> Die <strong><span id="vereinsPauschaleAmt">3.300</span> EUR Übungsleiterpauschale</strong> und die <strong><span id="vereinsEhrenamtAmt">960</span> EUR Ehrenamtspauschale</strong> gelten pro Person und Jahr, unabhängig von der Anzahl der Vereine. Wenn Sie drei Chöre betreuen, erhalten Sie insgesamt nur eine Pauschale von <span id="vereinsPauschaleAmt2">3.300</span> EUR — nicht 3 × <span id="vereinsPauschaleAmt3">3.300</span> EUR. <strong>Tragen Sie Ihr gesamtes kombiniertes begünstigtes Einkommen aus allen Vereinen im Monatsraster oben ein.</strong>',
     tip_anlage: '<strong>Anlage N vs. Anlage S — Eintragung in der Steuererklärung</strong><br><br>· <strong>Anlage S</strong> (Selbstständige): Sie stellen Rechnungen, versteuern selbst und gelten rechtlich als selbstständig. Die meisten freiberuflichen Übungsleiter fallen hierunter.<br>· <strong>Anlage N</strong> (Arbeitnehmer): Der Träger zahlt per Lohnabrechnung und behält Lohnsteuer ein. Sie erhalten eine Lohnsteuerbescheinigung.<br><br>In beiden Fällen gilt die §3 Nr. 26‑Pauschale identisch — sie wird als Abzug in der jeweiligen Anlage geltend gemacht. Der Unterschied betrifft nur die Eintragungsstelle, nicht die Höhe.',
     tip_admin_mix: '<strong>Administrative Tätigkeiten sind nicht nach §3 Nr. 26 begünstigt</strong><br><br>Die Pauschale gilt nur für unmittelbar pädagogische, künstlerische, sportliche oder betreuende Tätigkeiten. Folgende Aufgaben sind <strong>nicht begünstigt</strong> — auch wenn sie für eine gemeinnützige Organisation erfolgen:<br><br>· Terminplanung, Stundenpläne, Raumbuchung<br>· Buchhaltung, Verwaltungsaufgaben<br>· Leitung oder Beaufsichtigung anderer Mitarbeitender<br>· Reine Organisations‑/Event‑Planung<br><br>Bei gemischten Rollen ist nur der tatsächlich begünstigte Anteil zulässig. Teilen Sie Ihr Einkommen entsprechend über das Feld „kommerzielles Einkommen“ (gemischte Tätigkeit).',
     tip_vat: '<strong>Umsatzsteuer — wann müssen Sie Umsatzsteuer berechnen?</strong><br><br><strong>Kleinunternehmerregelung (§19 UStG)</strong> — Keine Umsatzsteuer, wenn der Vorjahresumsatz <strong>≤ 22.000 €</strong> war und der laufende Umsatz <strong>≤ 50.000 €</strong> bleibt (Rechtslage 2024: Grenzen angehoben von 17.500/50.000). Auf Rechnungen muss stehen: „Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.“<br><br><strong>§4‑UStG‑Befreiungen</strong> — Bestimmte Tätigkeiten sind unabhängig vom Umsatz stets umsatzsteuerfrei:<br>· Unterricht an Schulen/Universitäten oder staatlich anerkannten Bildungseinrichtungen<br>· Privatunterricht durch Lehrkräfte (§4 Nr. 21b)<br>· Heilberufe (Ärzte, Therapeuten usw.) — §4 Nr. 14<br>· Bestimmte kulturelle Einrichtungen — §4 Nr. 20<br><br><strong>Regelbesteuerung</strong> — Bei Überschreiten der Kleinunternehmer‑Grenzen oder freiwilligem Verzicht müssen Sie <strong>19% USt</strong> (7% für Bücher, bestimmte Kulturleistungen) ausweisen und vierteljährliche/jährliche Umsatzsteuervoranmeldungen abgeben.<br><br><em>Hinweis: KSK und Einkommensteuer werden auf Netto‑Einkünfte vor USt berechnet. USt erscheint in dieser Kalkulation nicht als Abzug.</em>',
     tip_vat_turnover: 'Dient nur zur Prüfung der Kleinunternehmer‑Regelung. Beeinflusst nicht die Steuer‑/KSK‑Berechnung.',
     tip_expenses: 'Ausrüstung, Software, Reisen, Materialien usw. zusätzlich zur Pauschale.',
-    tip_ehrenamt: '<strong>Ehrenamtspauschale (§3 Nr. 26a EStG) — <span id="ehrenamtAmt1">960</span> EUR/Jahr</strong><br><br>Eine zusätzliche Pauschale von <strong><span id="ehrenamtAmt2">960</span> EUR/Jahr</strong> für ehrenamtliche Tätigkeiten, z. B.:<br>· Vorstandsmitglied (Vorstandsmitglied) eines gemeinnützigen Vereins<br>· Kassenwart oder Schriftführer<br>· Verwaltungs‑Ehrenamt in einer gemeinnützigen Organisation<br><br><strong>Mit der Übungsleiterpauschale kombinierbar</strong>, jedoch nur bei tatsächlich getrennten Rollen — unterschiedliche Tätigkeiten, separat dokumentierte Verträge. Eine Aufteilung einer einzigen Rolle ist nicht zulässig.<br><br>Wie die Übungsleiterpauschale wird die Ehrenamtspauschale in der <em>Steuererklärung</em> geltend gemacht und setzt einen gemeinnützigen/ kirchlichen/ kommunalen oder öffentlich‑rechtlichen Träger voraus. Sie mindert das zu versteuernde Einkommen um zusätzliche <span id="ehrenamtAmt3">960</span> EUR.',
+    tip_ehrenamt: '<strong>Ehrenamtspauschale (§3 Nr. 26a EStG) — <span id="ehrenamtAmt1">960</span> EUR/Jahr</strong><br><br>Eine zusätzliche Pauschale von <strong><span id="ehrenamtAmt2">960</span> EUR/Jahr</strong> für ehrenamtliche Tätigkeiten, z. B.:<br>· Vorstandsmitglied (Vorstandsmitglied) eines gemeinnützigen Vereins<br>· Kassenwart oder Schriftführer<br>· Verwaltungs‑Ehrenamt in einer gemeinnützigen Organisation<br><br>Es handelt sich um eine steuerfreie Aufwandsentschädigung; Beträge oberhalb der Grenze sind steuerpflichtiges Einkommen.<br><br><strong>Nebenberuflich</strong> spielt auch hier eine Rolle: In der Praxis wird der Zeitumfang geprüft — in der Regel nicht mehr als etwa ein Drittel der Hauptberufszeit (Faustregel ~11–14 Std./Woche).<br><br><strong>Mit der Übungsleiterpauschale kombinierbar</strong>, jedoch nur bei tatsächlich getrennten Rollen — unterschiedliche Tätigkeiten, separat dokumentierte Verträge. Eine Aufteilung einer einzigen Rolle ist nicht zulässig, und das Ehrenamt muss von der regulären beruflichen Tätigkeit getrennt sein.<br><br>Wie die Übungsleiterpauschale wird die Ehrenamtspauschale in der <em>Steuererklärung</em> geltend gemacht und setzt einen gemeinnützigen/ kirchlichen/ kommunalen oder öffentlich‑rechtlichen Träger voraus. Sie mindert das zu versteuernde Einkommen um zusätzliche <span id="ehrenamtAmt3">960</span> EUR.',
     tip_kindergeld: '<strong>Kindergeld vs. Kinderfreibetrag (Günstigerprüfung)</strong><br><br>Das Finanzamt vergleicht automatisch beide Optionen und wendet die steuerlich günstigere an:<br><br>· <strong>Kindergeld</strong> (Geldleistung, §66 EStG): monatliche Zahlung unabhängig vom Einkommen — <span id="kgRateHint">–</span>/Monat im Jahr <span id="kgYearHint">–</span> pro Kind.<br>· <strong>Kinderfreibetrag</strong> (§32 Abs.6 EStG): wird vom zu versteuernden Einkommen abgezogen. Vorteilhaft nur, wenn die Steuerersparnis <em>höher</em> ist als das erhaltene Kindergeld.<br><br>Bei niedrigen Einkommen ist Kindergeld fast immer günstiger. Der KFB lohnt sich typischerweise erst ab ca. 70.000–80.000 € zu versteuerndem Einkommen. Dieser Rechner führt die Günstigerprüfung automatisch durch.',
     tip_other_income: '<strong>Was gehört hierher — und was nicht</strong><br><br>Dieses Feld ist für Einkommen, das <strong>vollständig getrennt</strong> von der oben im Monatsraster erfassten freiberuflichen Tätigkeit ist. Es wird zur Einkommensteuer‑Bemessungsgrundlage hinzugerechnet.<br><br><strong>Hier eintragen:</strong><br>· Gehalt aus Anstellung (Arbeitslohn)<br>· Mieteinnahmen (Einkünfte aus Vermietung)<br>· Kapitalerträge über dem Sparerpauschbetrag (Zinsen, Dividenden)<br>· Weitere selbstständige Einkünfte aus einer <em>anderen</em> Tätigkeit<br>· Minijob‑Einkünfte — <em>nur</em> bei individueller Versteuerung (Regelversteuerung). Bruttobetrag eintragen.<br><br><strong>Nicht eintragen:</strong><br>· Einkommen, das bereits im Monatsraster enthalten ist (Karten 1–2)<br>· Den kommerziellen Anteil einer gemischten §3 Nr. 26‑Tätigkeit — dieser wird automatisch über das Feld „kommerzielles Einkommen“ in Karte 1 berücksichtigt, wenn „Gemischt“ gewählt ist<br>· Steuerfreie Einkünfte (z. B. der nach §3 Nr. 26 befreite Anteil selbst)<br>· <strong>Pauschal versteuerte Minijobs (2% Pauschalsteuer)</strong> — diese werden vollständig vom Arbeitgeber abgeführt und erscheinen nicht in der Steuererklärung',
     minijob_flat_html: '<strong>Pauschal versteuert (2% Pauschalsteuer)</strong><br><span style="color:var(--muted);font-size:0.78rem;">Der Arbeitgeber führt Steuern & Sozialabgaben ab — nicht in Ihrer Steuererklärung. Dieses Einkommen ist für Sie <strong>steuerfrei</strong> und von der ESt‑Berechnung ausgeschlossen.</span>',
@@ -2575,6 +2789,11 @@ const I18N = {
     total_income_lost: 'Gesamter Einkommensverlust:',
     work_schedule_title: '📅 Ihr Arbeitsplan',
     work_schedule_sub: '— zur Berechnung des Verdienstausfalls an Arbeitstagen',
+    work_schedule_hours_hint: 'Stunden je Wochentag unten eintragen',
+    lbl_work_hourly_rate: 'Stundensatz (EUR)',
+    lbl_work_hours_day: 'Stunden pro Arbeitstag',
+    ph_work_hourly_rate: 'z. B. 35',
+    ph_work_hours_day: 'z. B. 4',
     ehrenamt_schedule_title: '🤝 Ehrenamts‑Arbeitsplan',
     ehrenamt_schedule_sub: '— zur Berechnung des Verdienstausfalls für Ehrenamts',
     page_title: 'KSK‑Rechner 2026',
@@ -2655,6 +2874,7 @@ const I18N = {
     net_row_church: 'Kirchensteuer',
     net_row_total_deduct: 'Gesamtabzüge',
     net_row_eff_rate: 'Effektiver Satz',
+    net_row_yearly_gross: 'Jahresbrutto',
     net_addback_title: 'Zusätzliches Haushaltseinkommen:',
     btn_remove: 'Entfernen',
     btn_include: 'Einbeziehen',
@@ -2662,7 +2882,10 @@ const I18N = {
     net_addback_kindergeld: 'Kindergeld',
     net_addback_vac_loss: '🏖 Einkommensverlust Urlaub',
     net_addback_sick_loss: '🤒 Einkommensverlust Krankheit',
+    net_deduct_charity: 'Spenden (Sonderausgaben)',
     net_takehome_monthly: 'Monatliches Netto',
+    btn_exclude: 'Ausschließen',
+    excluded_label: 'Nicht berücksichtigt',
     result_status_label: 'Status',
     result_breakdown_title: 'Berechnungsübersicht',
     result_row_total_gross: 'Gesamtes Bruttoeinkommen',
@@ -2738,7 +2961,7 @@ const I18N = {
     vat_klein_qualified_note: 'Hinweis: Ihre §3 Nr. 26‑Tätigkeit kann auch nach §4 Nr. 21/22 UStG befreit sein — klären Sie mit dem Finanzamt, ob eine USt‑Registrierung überhaupt erforderlich ist.',
     vat_regel: 'Regelbesteuerung: 19% USt auf Standardleistungen (7% auf Bücher, einige Kulturleistungen). Monatliche oder vierteljährliche Umsatzsteuervoranmeldung (ELSTER). Vorsteuer‑Aufzeichnungen für den Abzug führen.',
     enter_income_first: '(zuerst Einkommen im Monatsraster eingeben)',
-    monthly_impact_label: 'Monatliche Auswirkung:',
+    monthly_impact_label: 'Gesamtauswirkung:',
     monthly_impact_need_income: 'Einnahmen im Monatsraster oben eintragen, um die monatliche Auswirkung zu sehen.',
     next_year_warning: '⚠ Enthält {days} {dayLabel} nach {year}. Dies ist eine Schätzung mit {year}‑Einkommen und aktuellem Arbeitsplan{estLoss}.',
     next_year_est_loss: ' (≈ {amount})',
@@ -3060,11 +3283,9 @@ function calcKindergeldMonthly(year, childCount) {
 // ──────────────────────────────────────────────────────────
 function calcESt(year, taxableIncome) {
   // §32a EStG — official German income tax formula.
-  // Uses year-specific z1a / z2a coefficients from YEAR_DATA (published annually in
-  // the BMF Programmablaufplan / Jahressteuergesetz). Zone breakpoints (17,005 /
-  // 66,760 / 277,825 EUR) are fixed by law. z3c and z4c are derived structurally
-  // from continuity requirements at the 66,760 and 277,825 boundaries.
+  // For 2026 we follow the official BMF Programmablaufplan (UPTAB26) constants.
   if (taxableIncome <= 0) return 0;
+  if (year === 2026) return calcEStPAP2026(taxableIncome, 1);
   const d  = yd(year);
   const g  = d.grundfrei;
   if (taxableIncome <= g) return 0;
@@ -3093,6 +3314,32 @@ function calcESt(year, taxableIncome) {
   if (x <= 277825) return Math.max(0, 0.42 * x - z3c);
   // Zone 4: > 277,825 (45%)
   return Math.max(0, 0.45 * x - z4c);
+}
+
+// BMF Programmablaufplan 2026 (UPTAB26) — official tariff
+function calcEStPAP2026(X, kztab = 1) {
+  const GFB = 12348;
+  if (X < GFB + 1) return 0;
+  let ST;
+  if (X < 17800) {
+    const Y  = (X - GFB) / 10000;
+    let RW = Y * 914.51;
+    RW = RW + 1400;
+    ST = RW * Y;
+  } else if (X < 69879) {
+    const Y = (X - 17799) / 10000;
+    let RW = Y * 173.1;
+    RW = RW + 2397;
+    RW = RW * Y;
+    ST = RW + 1034.87;
+  } else if (X < 277826) {
+    ST = X * 0.42 - 11135.63;
+  } else {
+    ST = X * 0.45 - 19470.38;
+  }
+  ST = Math.floor(ST); // auf volle Euro abrunden
+  ST = Math.floor(ST * kztab);
+  return Math.max(0, ST);
 }
 
 // Ehegattensplitting: combine incomes, halve, apply tariff, double result
@@ -3168,6 +3415,7 @@ function calcEStRaw(year, zvE) {
   if (zvE <= 0) return 0;
   const d   = yd(year);
   const g   = d.grundfrei;
+  if (year === 2026) return calcEStPAP2026(zvE + g, 1);
   const z1a = d.z1a || 922.98;
   const z2a = d.z2a || 181.19;
   const x   = zvE + g;  // restore absolute income for zone checks
@@ -3299,6 +3547,7 @@ function onHealthInsChange() {
 
 function buildMonthGrid() {
   const grid = document.getElementById('monthGrid');
+  if (!grid) return;
   grid.innerHTML = '';
   const names = monthNames();
   const shortNames = monthShortNames();
@@ -3412,6 +3661,7 @@ const KASSE_DATA = [
 
 function buildKasseSelect(year) {
   const sel = document.getElementById('kasseSelect');
+  if (!sel) return;
   const prevVal = sel.value; // remember current selection
   sel.innerHTML = '';
 
@@ -3706,7 +3956,9 @@ function updateKindergeldAuto() {
 }
 
 // ── Addback toggle state ─────────────────────────────────
-const _addback = { spouse: true, kg: true, vac: false, sick: false };
+const _addback = { spouse: true, kg: true };
+const _lossInclude = { vac: true, sick: true };
+const _deductInclude = { charity: true };
 
 function resetAddbackButtons() {
   const configs = {
@@ -3714,6 +3966,7 @@ function resetAddbackButtons() {
     ntKgToggleBtn:     { color: 'var(--accent)', text: '#fff' },
     ntVacToggleBtn:    { color: 'var(--warn)',    text: '#000' },
     ntSickToggleBtn:   { color: 'var(--error)',   text: '#fff' },
+    ntCharityToggleBtn:{ color: 'var(--accent)',  text: '#fff' },
   };
   // Spouse and Kg default to included (Remove), vac/sick default to excluded (Include)
   ['ntSpouseToggleBtn','ntKgToggleBtn'].forEach(id => {
@@ -3725,18 +3978,13 @@ function resetAddbackButtons() {
     btn.style.color       = cfg.text;
     btn.style.borderColor = cfg.color;
   });
-  ['ntVacToggleBtn','ntSickToggleBtn'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    btn.textContent       = t('btn_include');
-    btn.style.background  = 'var(--card)';
-    btn.style.color       = 'var(--muted)';
-    btn.style.borderColor = 'var(--border)';
-  });
   _addback.spouse = true;
   _addback.kg     = true;
-  _addback.vac    = false;
-  _addback.sick   = false;
+  _lossInclude.vac  = true;
+  _lossInclude.sick = true;
+  _deductInclude.charity = true;
+  updateLossToggleButtons();
+  updateCharityToggleButton();
 }
 
 function toggleMakeupTip(id, event) {
@@ -3755,9 +4003,9 @@ document.addEventListener('click', () => {
 
 function toggleAddback(type) {
   _addback[type] = !_addback[type];
-  const idMap   = { spouse:'ntSpouseToggleBtn', kg:'ntKgToggleBtn', vac:'ntVacToggleBtn', sick:'ntSickToggleBtn' };
-  const colorMap = { spouse:'var(--accent)', kg:'var(--accent)', vac:'var(--warn)', sick:'var(--error)' };
-  const textMap  = { spouse:'#fff', kg:'#fff', vac:'#000', sick:'#fff' };
+  const idMap   = { spouse:'ntSpouseToggleBtn', kg:'ntKgToggleBtn' };
+  const colorMap = { spouse:'var(--accent)', kg:'var(--accent)' };
+  const textMap  = { spouse:'#fff', kg:'#fff' };
   const btn = document.getElementById(idMap[type]);
   if (!btn) return;
   const on = _addback[type];
@@ -3767,6 +4015,64 @@ function toggleAddback(type) {
   btn.style.borderColor = on ? colorMap[type] : 'var(--border)';
   renderSummary();
   renderHeadroomsWithAdjustments();
+}
+
+function updateLossToggleButtons() {
+  const cfg = {
+    vac: { id: 'ntVacToggleBtn', color: 'var(--warn)', text: '#000' },
+    sick:{ id: 'ntSickToggleBtn', color: 'var(--error)', text: '#fff' },
+  };
+  ['vac','sick'].forEach(type => {
+    const btn = document.getElementById(cfg[type].id);
+    if (!btn) return;
+    const on = _lossInclude[type];
+    btn.textContent       = on ? t('btn_exclude') : t('btn_include');
+    btn.style.background  = on ? cfg[type].color : 'var(--card)';
+    btn.style.color       = on ? cfg[type].text  : 'var(--muted)';
+    btn.style.borderColor = on ? cfg[type].color : 'var(--border)';
+  });
+}
+
+function toggleLossInclude(type) {
+  _lossInclude[type] = !_lossInclude[type];
+  updateLossToggleButtons();
+  if (document.getElementById('kskResults')?.classList.contains('show')) {
+    _suppressResultScroll = true;
+    calculate(true);
+    _suppressResultScroll = false;
+  } else {
+    renderSummary();
+  }
+}
+
+function updateCharityToggleButton() {
+  const btn = document.getElementById('ntCharityToggleBtn');
+  if (!btn) return;
+  const on = _deductInclude.charity;
+  btn.textContent       = on ? t('btn_exclude') : t('btn_include');
+  btn.style.background  = on ? 'var(--accent)' : 'var(--card)';
+  btn.style.color       = on ? '#fff' : 'var(--muted)';
+  btn.style.borderColor = on ? 'var(--accent)' : 'var(--border)';
+}
+
+function toggleCharityInclude() {
+  _deductInclude.charity = !_deductInclude.charity;
+  updateCharityToggleButton();
+  if (document.getElementById('kskResults')?.classList.contains('show')) {
+    _suppressResultScroll = true;
+    calculate(true);
+    _suppressResultScroll = false;
+  } else {
+    renderSummary();
+  }
+}
+
+function applyCharityUpdate() {
+  if (document.getElementById('kskResults')?.classList.contains('show')) {
+    calculate(true);
+  } else {
+    renderSummary();
+  }
 }
 
 let _chosenAssessment = 'separate'; // 'separate' or 'joint'
@@ -3793,10 +4099,38 @@ function renderSummary() {
   const div = m ? _cs.eligibleMonths : 1;
   const divLabel = m ? `÷${_cs.eligibleMonths}` : '';
 
+  updateLossToggleButtons();
+  updateCharityToggleButton();
+
+  // Spouse net income (used in addbacks + yearly gross)
+  const spouseLst      = _cs.spouseLohnsteuer      || 0;
+  const spouseLstSoli  = _cs.spouseLohnsteuerSoli  || 0;
+  const spouseChurch   = spouseLst * _cs.churchRate;
+  const spouseSoc      = _cs.spouseSocialYearly    || 0;
+  const spouseNetYearly = Math.max(0, _cs.spouseIncome - spouseLst - spouseLstSoli - spouseChurch - spouseSoc);
+
   document.getElementById('summaryTitle').textContent = m
     ? tFmt('summary_monthly_title_with', { months: _cs.eligibleMonths })
     : t('summary_yearly_title');
   document.getElementById('ntTakeHomeLabel').textContent = m ? t('net_takehome_monthly') : t('net_takehome_yearly');
+  const ygLabel = document.getElementById('ntYearlyGrossLabel');
+  const ygVal = document.getElementById('ntYearlyGross');
+  if (!m) {
+    ygLabel.style.display = '';
+    ygVal.style.display = '';
+    // Yearly gross should reflect household addbacks (spouse + Kindergeld) when toggled
+    ygLabel.textContent = t('net_row_yearly_gross');
+    const baseGross = _cs.totalIncome || 0;
+    const spouseAdd = _addback.spouse ? (_cs.spouseIncome || 0) : 0;
+    ygVal.textContent = eur(baseGross + spouseAdd);
+  } else {
+    ygLabel.style.display = '';
+    ygVal.style.display = '';
+    ygLabel.textContent = t('net_row_monthly_gross');
+    const baseGross = (_cs.totalIncome || 0) / div;
+    const spouseAdd = _addback.spouse ? (_cs.spouseIncome || 0) / 12 : 0;
+    ygVal.textContent = eur(baseGross + spouseAdd);
+  }
 
   const f = v => eur(v / div);
 
@@ -3840,15 +4174,16 @@ function renderSummary() {
   // ── Addback toggles (spouse net income + Kindergeld) ────────
   const isMarried = _cs.spouseIncome > 0;
   const hasKg     = _cs.kgMonthly > 0;
-  const showAddback = isMarried || hasKg;
+  const hasVacLoss  = (_cs.vacationLossYearly || 0) > 0;
+  const hasSickLoss = (_cs.sickLossYearly    || 0) > 0;
+  const hasCharity  = (_cs.charityRaw || 0) > 0;
+  const showAddback = isMarried || hasKg || hasVacLoss || hasSickLoss || hasCharity;
 
   document.getElementById('ntAddbackSection').style.display = showAddback ? '' : 'none';
   document.getElementById('ntSpouseToggleRow').style.display = isMarried ? 'flex' : 'none';
   document.getElementById('ntKgToggleRow').style.display     = hasKg     ? 'flex' : 'none';
 
-  // Vacation / sick loss rows — show only if that calculator has computed losses
-  const hasVacLoss  = (_cs.vacationLossYearly || 0) > 0;
-  const hasSickLoss = (_cs.sickLossYearly    || 0) > 0;
+  // Vacation / sick loss rows — allow include/exclude from results
   document.getElementById('ntVacToggleRow').style.display  = hasVacLoss  ? 'flex' : 'none';
   document.getElementById('ntSickToggleRow').style.display = hasSickLoss ? 'flex' : 'none';
   if (hasVacLoss || hasSickLoss) {
@@ -3856,7 +4191,8 @@ function renderSummary() {
   }
   if (hasVacLoss) {
     document.getElementById('ntVacLoss').textContent = m
-      ? `- ${eur(_cs.vacationLossYearly / div)}${t('per_month_short')}` : `- ${eur(_cs.vacationLossYearly)}${t('per_year_short')}`;
+      ? (_lossInclude.vac ? `- ${eur(_cs.vacationLossYearly / div)}${t('per_month_short')}` : t('excluded_label'))
+      : (_lossInclude.vac ? `- ${eur(_cs.vacationLossYearly)}${t('per_year_short')}` : t('excluded_label'));
     const { workDayRate } = gridDailyRate();
     const tipEl = document.getElementById('ntVacMakeupTip');
     if (tipEl && workDayRate > 0) {
@@ -3867,7 +4203,8 @@ function renderSummary() {
   }
   if (hasSickLoss) {
     document.getElementById('ntSickLoss').textContent = m
-      ? `- ${eur(_cs.sickLossYearly / div)}${t('per_month_short')}` : `- ${eur(_cs.sickLossYearly)}${t('per_year_short')}`;
+      ? (_lossInclude.sick ? `- ${eur(_cs.sickLossYearly / div)}${t('per_month_short')}` : t('excluded_label'))
+      : (_lossInclude.sick ? `- ${eur(_cs.sickLossYearly)}${t('per_year_short')}` : t('excluded_label'));
     const { workDayRate } = gridDailyRate();
     const tipEl = document.getElementById('ntSickMakeupTip');
     if (tipEl && workDayRate > 0) {
@@ -3877,13 +4214,17 @@ function renderSummary() {
     }
   }
 
+  document.getElementById('ntCharityToggleRow').style.display = hasCharity ? 'flex' : 'none';
+  if (hasCharity) {
+    const val = _deductInclude.charity
+      ? `${eur(_cs.charityDeduct || 0)}${t('per_year_short')} ${tFmt('charity_cap_note', { cap: eur(_cs.charityCap || 0), base: eur(_cs.charityBase || 0) })}`
+      : t('excluded_label');
+    document.getElementById('ntCharityDeduct').textContent = val;
+  }
+
   // Spouse net income — Lohnsteuer (by Steuerklasse) + Soli + church + social insurance.
   // Social insurance (KV, PV, RV, AV employee shares) apply regardless of KSK status.
-  const spouseLst      = _cs.spouseLohnsteuer      || 0;
-  const spouseLstSoli  = _cs.spouseLohnsteuerSoli  || 0;
-  const spouseChurch   = spouseLst * _cs.churchRate;
-  const spouseSoc      = _cs.spouseSocialYearly    || 0;
-  const spouseNetYearly = Math.max(0, _cs.spouseIncome - spouseLst - spouseLstSoli - spouseChurch - spouseSoc);
+  // Values computed earlier for use in yearly gross + addbacks.
 
   // Build a breakdown tooltip for the spouse row
   const sd = _cs.spouseSocialData || {};
@@ -3923,22 +4264,16 @@ function renderSummary() {
   // Yearly:   freelanceNetYearly        +  spouseNetYearly        +  kgYearly
   const spouseAddback = _addback.spouse ? spouseNetYearly : 0;
   const kgAddback     = _addback.kg     ? (_cs.kgYearly || 0) : 0;
-  const vacDeduct     = _addback.vac    ? (_cs.vacationLossYearly || 0) : 0;
-  const sickDeduct    = _addback.sick   ? (_cs.sickLossYearly    || 0) : 0;
 
   let totalShown;
   if (m) {
     totalShown = Math.max(0, netYearlyNow / div)
                + spouseAddback / 12
-               + kgAddback / 12
-               - vacDeduct / div
-               - sickDeduct / div;
+               + kgAddback / 12;
   } else {
     totalShown = Math.max(0, netYearlyNow)
                + spouseAddback
-               + kgAddback
-               - vacDeduct
-               - sickDeduct;
+               + kgAddback;
   }
   document.getElementById('ntTakeHome').textContent = eur(totalShown);
   document.getElementById('ntTakeHomeLabel').textContent = m ? t('net_takehome_monthly') : t('net_takehome_yearly');
@@ -4069,37 +4404,8 @@ function renderTaxHeadroom() {
 
 function renderHeadroomsWithAdjustments() {
   if (!_cs) return;
-  // When vac/sick are included, they reduce effective income and taxable profit.
-  // We temporarily patch _cs so renderTaxHeadroom and KSK headroom see adjusted values.
-  const vacAdj  = _addback.vac  ? (_cs.vacationLossYearly || 0) : 0;
-  const sickAdj = _addback.sick ? (_cs.sickLossYearly    || 0) : 0;
-  const totalAdj = vacAdj + sickAdj;
-
-  if (totalAdj === 0) {
-    renderTaxHeadroom();
-    renderKSKHeadroom();
-    return;
-  }
-
-  // Patch _cs temporarily
-  const origTaxableProfit = _cs.taxableProfit;
-  const origYourRawIncome = _cs.yourRawIncome;
-  const origJointIncome   = _cs.jointIncome;
-  const origTotalIncome   = _cs.totalIncome;
-
-  _cs.taxableProfit = Math.max(0, _cs.taxableProfit - totalAdj);
-  _cs.yourRawIncome = Math.max(0, _cs.yourRawIncome - totalAdj);
-  _cs.jointIncome   = Math.max(0, _cs.jointIncome   - totalAdj);
-  _cs.totalIncome   = Math.max(0, _cs.totalIncome   - totalAdj);
-
   renderTaxHeadroom();
   renderKSKHeadroom();
-
-  // Restore
-  _cs.taxableProfit = origTaxableProfit;
-  _cs.yourRawIncome = origYourRawIncome;
-  _cs.jointIncome   = origJointIncome;
-  _cs.totalIncome   = origTotalIncome;
 }
 
 function renderKSKHeadroom() {
@@ -4132,8 +4438,14 @@ function renderKSKHeadroom() {
 
 let _suppressResultScroll = false;
 
-function calculate() {
-  resetAddbackButtons();
+function parseLossValue(id) {
+  const txt = document.getElementById(id)?.textContent || '';
+  const num = parseFloat(txt.replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+  return Math.abs(num);
+}
+
+function calculate(keepAddbacks = false) {
+  if (!keepAddbacks) resetAddbackButtons();
   const year = parseInt(document.getElementById('year').value);
   const startMonth = parseInt(document.getElementById('startMonth').value);
   const pauschaleEligible = document.getElementById('pauschaleEligible').value === 'yes';
@@ -4167,7 +4479,7 @@ function calculate() {
   const d = yd(year);
 
   // ── Gather monthly incomes ──
-  let totalGross = 0;
+  let totalGrossRaw = 0;
   const now = new Date();
   const cy = now.getFullYear();
   const cm = now.getMonth() + 1;
@@ -4175,7 +4487,7 @@ function calculate() {
   document.querySelectorAll('.month-cell input').forEach(input => {
     const m = parseInt(input.dataset.month);
     if (m < startMonth) return;
-    totalGross += parseFloat(input.value) || 0;
+    totalGrossRaw += parseFloat(input.value) || 0;
   });
 
   const eligibleMonths = 13 - startMonth;
@@ -4196,7 +4508,14 @@ function calculate() {
   //   Expenses €500:  max(0, 500−3300) = 0    → fully absorbed, no extra deduction
   //   Expenses €4,000: max(0, 4000−3300) = 700 → only €700 deducted beyond Pauschale
   //   No Pauschale:   full expenses deducted as normal
-  const qualifyingGross   = totalGross;
+  const vacLossYearlyRaw  = parseLossValue('vacTotalLost');
+  const sickLossYearlyRaw = parseLossValue('sickTotalLost');
+  const vacLossYearly  = _lossInclude.vac  ? vacLossYearlyRaw  : 0;
+  const sickLossYearly = _lossInclude.sick ? sickLossYearlyRaw : 0;
+  const totalLossYearly = vacLossYearly + sickLossYearly;
+  const lossApplied = Math.min(totalLossYearly, totalGrossRaw);
+
+  const qualifyingGross   = Math.max(0, totalGrossRaw - lossApplied);
   const pauschaleDeduct   = pauschaleEligible ? Math.min(d.pauschale, qualifyingGross) : 0;
   const ehrenamtActive    = pauschaleEligible &&
     (document.getElementById('ehrenamtToggle')?.value === 'yes');
@@ -4310,7 +4629,11 @@ function calculate() {
   // Steuerklasse only affects employer Lohnsteuer withholding and
   // Einkommensteuer-Vorauszahlungen (quarterly advance estimates).
   //
-  const yourRawIncome = taxableProfit + otherIncome;
+  const charityRaw = parseFloat(document.getElementById('charityGiving')?.value) || 0;
+  const charityBase = taxableProfit + otherIncome + ((marital === 'married' && _chosenAssessment === 'joint') ? spouseIncome : 0);
+  const charityCap = Math.max(0, 0.2 * charityBase);
+  const charityDeduct = _deductInclude.charity ? Math.min(charityRaw, charityCap) : 0;
+  const yourRawIncome = Math.max(0, taxableProfit + otherIncome - charityDeduct);
 
   // ── Kindergeld ──────────────────────────────────────────
   const kindergeldReceived = (document.getElementById('kindergeldReceived')?.value || 'yes') === 'yes';
@@ -4394,7 +4717,7 @@ function calculate() {
 
   // ── Full Netto (freelance income only; spouse & Kindergeld are addbacks) ──
   const totalDeductions = kskYearlyDeduct + chosenESt + chosenSoli + churchTaxYearly;
-  const totalIncome = totalGross + commercialIncome + ehrenamtGross;
+  const totalIncome = qualifyingGross + commercialIncome + ehrenamtGross;
   const netYearly = totalIncome - totalDeductions;
   const netMonthly = eligibleMonths > 0 ? netYearly / eligibleMonths : 0;
   const effRate = totalIncome > 0 ? totalDeductions / totalIncome : 0;
@@ -4593,7 +4916,7 @@ function calculate() {
   // ── Store calc state for renderSummary ──
   _cs = {
     year,
-    totalGross, totalIncome, taxableProfit, totalDeductions, effRate,
+    totalGross: qualifyingGross, totalIncome, taxableProfit, totalDeductions, effRate,
     yourESt, yourSoli, churchTaxYearly, churchRate,
     chosenESt, chosenSoli,
     separateTotalESt, jointESt, jointSoli,
@@ -4609,7 +4932,9 @@ function calculate() {
     kgMonthly, kgYearly, kindergeldReceived,
     useKFBSeparate, useKFBJoint, kfbSavingSeparate, kfbSavingJoint,
     ehrenamtActive, ehrenamtDeduct, ehrenamtGross, pauschaleDeduct,
-    vacationLossYearly: 0, sickLossYearly: 0
+    vacationLossYearly: vacLossYearlyRaw, sickLossYearly: sickLossYearlyRaw,
+    lossAppliedToResults: totalLossYearly > 0,
+    charityRaw, charityCap, charityBase, charityDeduct, charityIncluded: _deductInclude.charity
   };
 
   // ── Compute vacation/sick losses from the month grid ──────────────────────
@@ -4631,7 +4956,7 @@ function calculate() {
     }
 
     // Update summary strips under each calculator
-    const normalMonthly = eligibleMonths > 0 ? totalGross / eligibleMonths : 0;
+    const normalMonthly = eligibleMonths > 0 ? qualifyingGross / eligibleMonths : 0;
     const MONTH_NAMES = [''].concat(monthShortNames());
 
     if (_vacVisible && vacLoss && _cs.vacationLossYearly > 0) {
@@ -4688,7 +5013,7 @@ function calculate() {
   // Netto breakdown
   // Gross = totalIncome (qualifying + commercial + ehrenamt); sub-lines shown when relevant
   document.getElementById('ntGross').textContent = eur(totalIncome);
-  document.getElementById('ntQualifying').textContent = eur(totalGross);
+  document.getElementById('ntQualifying').textContent = eur(qualifyingGross);
   // Show §3 Nr.26 qualifying sub-line when there are other income streams
   document.getElementById('ntQualifyingRow').style.display =
     (commercialIncome > 0 || ehrenamtGross > 0) ? 'flex' : 'none';
@@ -4859,6 +5184,39 @@ function removeVariationRow(id) {
   else recalcTeaching();
 }
 
+let _teachingHrsWeek = 0;
+let _ehrenamtHrsWeek = 0;
+
+function updateMainJobWarnings() {
+  const mainHours = parseFloat(document.getElementById('mainJobHours')?.value) || 0;
+  const warnTeach = document.getElementById('mainJobHoursWarning');
+  const warnEh    = document.getElementById('ehrenamtMainJobWarning');
+  if (!warnTeach || !warnEh) return;
+
+  const threshold = mainHours > 0 ? (mainHours / 3) : 0;
+  if (mainHours > 0 && _teachingHrsWeek > 0 && _teachingHrsWeek > threshold) {
+    warnTeach.style.display = 'block';
+    warnTeach.innerHTML = tFmt('main_job_over_warn', {
+      hours: _teachingHrsWeek.toFixed(1),
+      main: mainHours.toFixed(1),
+    });
+  } else {
+    warnTeach.style.display = 'none';
+    warnTeach.textContent = '';
+  }
+
+  if (mainHours > 0 && _ehrenamtHrsWeek > 0 && _ehrenamtHrsWeek > threshold) {
+    warnEh.style.display = 'block';
+    warnEh.innerHTML = tFmt('eh_main_job_over_warn', {
+      hours: _ehrenamtHrsWeek.toFixed(1),
+      main: mainHours.toFixed(1),
+    });
+  } else {
+    warnEh.style.display = 'none';
+    warnEh.textContent = '';
+  }
+}
+
 function recalcTeaching() {
   const rows = document.getElementById('variationRows').children;
   let totalMonthly = 0, totalHrsWeek = 0;
@@ -4935,6 +5293,8 @@ function recalcTeaching() {
     warnDetail.style.display = 'none';
   }
 
+  _teachingHrsWeek = anyData ? totalHrsWeek : 0;
+  updateMainJobWarnings();
   if (typeof recalcBoth === 'function') recalcBoth();
 }
 
@@ -5040,10 +5400,12 @@ function recalcEhrenamt() {
   const rows = document.getElementById('ehrenamtRows')?.children;
   if (!rows) return;
   let totalMonthly = 0;
+  let totalHrsWeek = 0;
   let anyData = false;
 
   // Frequency → monthly multiplier
   const freqToMonthly = { weekly: 4.33, biweekly: 2.165, monthly: 1 };
+  const freqToWeekly  = { weekly: 1, biweekly: 0.5, monthly: 1 / 4.33 };
 
   Array.from(rows).forEach(row => {
     const id       = row.id.replace('ecrow-','');
@@ -5052,11 +5414,13 @@ function recalcEhrenamt() {
     const freq     = document.getElementById(`ecFreq-${id}`)?.value || 'monthly';
     const resEl    = document.getElementById(`ecResult-${id}`);
     const mult     = freqToMonthly[freq] || 1;
+    const wmult    = freqToWeekly[freq] || (1 / 4.33);
 
     if (rate) {
       anyData = true;
       const monthly = rate * hrs * mult;
       totalMonthly += monthly;
+      totalHrsWeek += hrs * wmult;
       if (resEl) { resEl.textContent = eur(monthly); resEl.style.color = 'var(--accent2)'; }
     } else {
       if (resEl) { resEl.textContent = '—'; resEl.style.color = 'var(--muted)'; }
@@ -5094,6 +5458,8 @@ function recalcEhrenamt() {
     btn.disabled = true; btn.style.opacity = '0.4';
     noteEl.style.display = 'none';
   }
+  _ehrenamtHrsWeek = anyData ? totalHrsWeek : 0;
+  updateMainJobWarnings();
   // Ehrenamts income affects the work-day rate used by vacation/sick calculators
   if (typeof recalcBoth === 'function') recalcBoth();
 }
@@ -5206,11 +5572,15 @@ function removeVacationRow(id) {
 function toggleWorkDay(dayIndex) {
   const cb    = document.getElementById(`wd-${dayIndex}`);
   const label = document.getElementById(`wdLabel-${dayIndex}`);
+  const hours = document.getElementById(`wdHours-${dayIndex}`);
   if (!cb) return;
   // cb is a hidden checkbox — manually flip it (no label wrapping, so no double-toggle)
   cb.checked = !cb.checked;
   label.classList.toggle('active', cb.checked);
+  if (hours) hours.disabled = !cb.checked;
+  _suppressResultScroll = true;
   recalcBoth();
+  _suppressResultScroll = false;
 }
 
 function toggleWorkDayE(dayIndex) {
@@ -5219,12 +5589,29 @@ function toggleWorkDayE(dayIndex) {
   if (!cb) return;
   cb.checked = !cb.checked;
   label.classList.toggle('active', cb.checked);
+  _suppressResultScroll = true;
   recalcBoth();
+  _suppressResultScroll = false;
 }
 
 function recalcBoth() {
   recalcVacation();
   recalcSick();
+}
+
+function getWorkDayHours() {
+  const days = getWorkDays();
+  let total = 0;
+  let count = 0;
+  days.forEach(d => {
+    const h = parseFloat(document.getElementById(`wdHours-${d}`)?.value) || 0;
+    if (h > 0) {
+      total += h;
+      count += 1;
+    }
+  });
+  const avg = count > 0 ? total / count : 0;
+  return { totalHours: total, avgHours: avg, dayCount: days.length };
 }
 
 function dateFormatHint() {
@@ -5376,6 +5763,16 @@ function gridDailyRate() {
   let dailyRate    = totalCalDays  > 0 ? totalIncome / totalCalDays  : 0;
   let workDayRate  = totalWorkDays > 0 ? totalIncome / totalWorkDays : 0;
   let weeklyIncome = dailyRate * 7;
+
+  // If user provides hourly rate + hours per day, override work-day rate
+  const hourly = parseFloat(document.getElementById('workHourlyRate')?.value) || 0;
+  const hoursInfo = getWorkDayHours();
+  if (hourly > 0 && (hoursInfo.avgHours > 0 || hoursInfo.totalHours > 0)) {
+    const perDay = hoursInfo.avgHours > 0 ? hoursInfo.avgHours : 0;
+    workDayRate = hourly * perDay;
+    dailyRate = workDayRate;
+    weeklyIncome = hourly * hoursInfo.totalHours;
+  }
 
   if (!hasGridIncome) {
     const fallback = teachingDailyRate();
@@ -5581,6 +5978,11 @@ function recalcVacation() {
   }
   updateMakeupSuggestion();
   if (_cs) { _cs.vacationLossYearly = grandTotalLost || 0; renderSummary(); }
+  if (document.getElementById('kskResults')?.classList.contains('show')) {
+    _suppressResultScroll = true;
+    calculate(true);
+    _suppressResultScroll = false;
+  }
 }
 // ──────────────────────────────────────────────────────────
 let _sickCounter = 0;
@@ -5805,6 +6207,11 @@ function recalcSick() {
   }
   updateMakeupSuggestion();
   if (_cs) { _cs.sickLossYearly = grandTotalLost || 0; renderSummary(); }
+  if (document.getElementById('kskResults')?.classList.contains('show')) {
+    _suppressResultScroll = true;
+    calculate(true);
+    _suppressResultScroll = false;
+  }
 }
 
 
@@ -5906,31 +6313,38 @@ function updateVatNote() {
   const cy = new Date().getFullYear();
   const yearSel = document.getElementById('year');
   const validYear = Math.min(Math.max(cy, 2020), 2026);
-  yearSel.value = validYear;
+  if (yearSel) yearSel.value = validYear;
 
   buildMonthGrid();
-  updateYearFigures();
-  applyStartMonth();
-  updatePauschaleEligibility();
-  updateVatNote();
-  updateKindergeldQuestion();
+  if (typeof updateYearFigures === 'function') updateYearFigures();
+  if (typeof applyStartMonth === 'function') applyStartMonth();
+  if (typeof updatePauschaleEligibility === 'function') updatePauschaleEligibility();
+  if (typeof updateVatNote === 'function') updateVatNote();
+  if (typeof updateKindergeldQuestion === 'function') updateKindergeldQuestion();
   addVariationRow();   // Teaching Income Calculator — start with one empty row
   addEhrenamtRow();    // Ehrenamts Income Calculator — start with one empty row
-  onKasseChange(); // initialise Krankenkasse dropdown state
-  updateWorkSchedulePanel();
-  updateDateFormatHints();
+  if (typeof onKasseChange === 'function') onKasseChange(); // initialise Krankenkasse dropdown state
+  if (typeof updateWorkSchedulePanel === 'function') updateWorkSchedulePanel();
+  if (typeof updateDateFormatHints === 'function') updateDateFormatHints();
 
-  yearSel.addEventListener('change', () => { updateYearFigures(); applyStartMonth(); updatePauschaleNote(); updatePauschaleEligibility(); updateKindergeldQuestion(); });
-  document.getElementById('startMonth').addEventListener('change', applyStartMonth);
-  document.getElementById('pauschaleActivity').addEventListener('change', updatePauschaleEligibility);
-  document.getElementById('weeklyHours').addEventListener('change', updatePauschaleEligibility);
-  document.getElementById('employmentType').addEventListener('change', updatePauschaleEligibility);
-  document.getElementById('adminMix').addEventListener('change', updatePauschaleEligibility);
-  document.getElementById('ehrenamtToggle').addEventListener('change', () => {
+  if (yearSel) yearSel.addEventListener('change', () => { updateYearFigures(); applyStartMonth(); updatePauschaleNote(); updatePauschaleEligibility(); updateKindergeldQuestion(); });
+  const startMonthEl = document.getElementById('startMonth');
+  if (startMonthEl) startMonthEl.addEventListener('change', applyStartMonth);
+  const actEl = document.getElementById('pauschaleActivity');
+  if (actEl) actEl.addEventListener('change', updatePauschaleEligibility);
+  const hoursEl = document.getElementById('weeklyHours');
+  if (hoursEl) hoursEl.addEventListener('change', updatePauschaleEligibility);
+  const empEl = document.getElementById('employmentType');
+  if (empEl) empEl.addEventListener('change', updatePauschaleEligibility);
+  const adminEl = document.getElementById('adminMix');
+  if (adminEl) adminEl.addEventListener('change', updatePauschaleEligibility);
+  const ehToggle = document.getElementById('ehrenamtToggle');
+  if (ehToggle) ehToggle.addEventListener('change', () => {
     updatePauschaleEligibility();
     updateWorkSchedulePanel();
   });
-  document.getElementById('commercialIncome').addEventListener('input', () => {
+  const commEl = document.getElementById('commercialIncome');
+  if (commEl) commEl.addEventListener('input', () => {
     updatePauschaleEligibility();
     const val = parseFloat(document.getElementById('commercialIncome').value) || 0;
     if (val > 0) {
@@ -5938,11 +6352,15 @@ function updateVatNote() {
       document.getElementById('minijobCheckGroup').style.display = 'none';
     }
   });
-  document.getElementById('healthInsType').addEventListener('change', onHealthInsChange);
-  document.getElementById('churchMember').addEventListener('change', () => {});
-  document.getElementById('vatStatus').addEventListener('change', updateVatNote);
-  document.getElementById('vatTurnover').addEventListener('input', updateVatNote);
-  document.getElementById('pauschaleActivity').addEventListener('change', updateVatNote);
+  const hiEl = document.getElementById('healthInsType');
+  if (hiEl) hiEl.addEventListener('change', onHealthInsChange);
+  const churchEl = document.getElementById('churchMember');
+  if (churchEl) churchEl.addEventListener('change', () => {});
+  const vatStatusEl = document.getElementById('vatStatus');
+  if (vatStatusEl) vatStatusEl.addEventListener('change', updateVatNote);
+  const vatTurnoverEl = document.getElementById('vatTurnover');
+  if (vatTurnoverEl) vatTurnoverEl.addEventListener('input', updateVatNote);
+  if (actEl) actEl.addEventListener('change', updateVatNote);
 })();
 </script>
 <!-- ═══════════════════════════════════════════════════════
@@ -5975,6 +6393,14 @@ function updateVatNote() {
       <button class="settings-btn" id="fmtBtn-us" onclick="setFormat('us')" title="US: 1,234.56 · MM/DD/YYYY">🇺🇸 US</button>
     </div>
     <div style="font-size:0.7rem;color:var(--muted);margin-top:0.45rem;line-height:1.5;" id="fmtPreview"></div>
+  </div>
+  <div class="settings-divider"></div>
+  <div>
+    <div class="settings-section-title" data-i18n="settings_exports">📄 Exports</div>
+    <div class="settings-row">
+      <button class="settings-btn" onclick="exportPDF()" data-i18n="export_pdf">Export PDF</button>
+      <button class="settings-btn" onclick="exportExcel()" data-i18n="export_excel">Export Excel</button>
+    </div>
   </div>
 </div>
 
@@ -6078,6 +6504,250 @@ function applyFormat() {
   // Nothing to do structurally — eur() and fmtDate() read _settings.format at call time
 }
 
+function formatShortDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return _settings.format === 'us' ? `${m}/${day}/${y}` : `${day}.${m}.${y}`;
+}
+
+function ensureCalcState() {
+  if (!_cs && typeof calculate === 'function') {
+    _suppressResultScroll = true;
+    calculate(true);
+    _suppressResultScroll = false;
+  }
+}
+
+function buildExportData() {
+  ensureCalcState();
+  if (!_cs) return null;
+  const y = _cs;
+  const chosenEStNow  = _chosenAssessment === 'joint' ? y.jointESt : y.separateTotalESt;
+  const chosenSoliNow = _chosenAssessment === 'joint' ? calcSoliSimple(y.jointESt, true, y.year) : y.yourSoli;
+  const churchNow     = chosenEStNow * y.churchRate;
+  const totalDeductNow = (y.kskRequired ? y.yearlyKSK : 0) + chosenEStNow + chosenSoliNow + churchNow;
+  const netYearlyNow  = y.totalIncome - totalDeductNow;
+  const statusText = (document.getElementById('statusHeadline')?.textContent || '').trim()
+    || (y.kskRequired ? t('status_join_headline') : t('status_safe_headline'));
+
+  const summaryRows = [
+    [t('export_year_label'), String(y.year)],
+    [t('export_eligible_months'), String(y.eligibleMonths)],
+    [t('export_total_gross'), eur(y.totalIncome)],
+    [t('export_taxable_profit'), eur(y.taxableProfit)],
+    [t('export_total_deductions'), eur(totalDeductNow)],
+    [t('export_yearly_takehome'), eur(netYearlyNow)],
+  ];
+
+  const incomeRows = [
+    [t('export_qualifying_income'), eur(y.qualifyingGross)],
+  ];
+  if (y.commercialIncome > 0) incomeRows.push([t('export_commercial_income'), eur(y.commercialIncome)]);
+  if (y.ehrenamtGross > 0) incomeRows.push([t('export_ehrenamt_income'), eur(y.ehrenamtGross)]);
+  if (y.pauschaleDeduct > 0) incomeRows.push([t('export_pauschale_deduct'), `- ${eur(y.pauschaleDeduct)}`]);
+  if (y.ehrenamtDeduct > 0) incomeRows.push([t('export_ehrenamt_deduct'), `- ${eur(y.ehrenamtDeduct)}`]);
+  if (y.effectiveExpenses > 0) incomeRows.push([t('export_business_expenses'), `- ${eur(y.effectiveExpenses)}`]);
+  if (y.charityIncluded && y.charityDeduct > 0) incomeRows.push([t('export_charity_deduct'), `- ${eur(y.charityDeduct)}`]);
+
+  const deductionRows = [
+    [t('export_ksk_contrib'), y.kskRequired ? eur(y.yearlyKSK) : tFmt('ksk_not_required', { amount: eur(0) })],
+    [t('export_income_tax'), eur(chosenEStNow)],
+    [t('export_soli'), eur(chosenSoliNow)],
+    [t('export_church'), churchNow > 0 ? eur(churchNow) : eur(0)],
+  ];
+
+  const kskRows = [
+    [t('export_status'), statusText],
+    [t('export_ksk_limit'), eur(y.proRatedLimit)],
+    [t('export_avg_monthly_profit'), eur(y.avgMonthlyProfit)],
+  ];
+
+  return {
+    statementDate: formatShortDate(new Date()),
+    summaryRows,
+    incomeRows,
+    deductionRows,
+    kskRows,
+  };
+}
+
+function downloadBlob(data, filename, mime) {
+  const blob = new Blob([data], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 100);
+}
+
+function exportExcel() {
+  const data = buildExportData();
+  if (!data) return;
+  const esc = v => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = [];
+  const addSection = (title, rows) => {
+    lines.push([title]);
+    lines.push([t('export_col_label'), t('export_col_value')]);
+    rows.forEach(r => lines.push(r));
+    lines.push(['']);
+  };
+  addSection(t('export_section_summary'), data.summaryRows);
+  addSection(t('export_section_income'), data.incomeRows);
+  addSection(t('export_section_deductions'), data.deductionRows);
+  addSection(t('export_section_ksk'), data.kskRows);
+
+  const csv = '\uFEFF' + lines.map(row => row.map(esc).join(',')).join('\r\n');
+  const year = _cs?.year || new Date().getFullYear();
+  downloadBlob(csv, `ksk-statement-${year}.csv`, 'text/csv;charset=utf-8;');
+}
+
+function exportPDF() {
+  const data = buildExportData();
+  if (!data) return;
+  const year = _cs?.year || new Date().getFullYear();
+  const w = window.open('', '_blank');
+  if (!w) return;
+  const rowHtml = rows => rows.map(([label, value]) => `
+      <tr>
+        <td>${label}</td>
+        <td class="amt">${value}</td>
+      </tr>`).join('');
+  w.document.write(`<!doctype html>
+    <html lang="${currentLang()}">
+    <head>
+      <meta charset="utf-8" />
+      <title>${t('export_title')} · ${year}</title>
+      <style>
+        :root {
+          --ink: #0d1b2a;
+          --muted: #6b7280;
+          --line: #e5e7eb;
+          --bg: #f8fafc;
+        }
+        body {
+          margin: 0;
+          background: var(--bg);
+          font-family: "Courier New", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+          color: var(--ink);
+        }
+        .sheet {
+          max-width: 860px;
+          margin: 32px auto;
+          background: #fff;
+          border: 1px solid var(--line);
+          box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+          padding: 28px 32px 32px;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          border-bottom: 2px solid var(--ink);
+          padding-bottom: 12px;
+          margin-bottom: 18px;
+        }
+        .title {
+          font-size: 20px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          font-weight: 700;
+        }
+        .meta {
+          text-align: right;
+          font-size: 12px;
+          color: var(--muted);
+          line-height: 1.6;
+        }
+        h2 {
+          font-size: 12px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin: 22px 0 8px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 13px;
+        }
+        td {
+          padding: 8px 0;
+          border-bottom: 1px solid var(--line);
+        }
+        td.amt {
+          text-align: right;
+          white-space: nowrap;
+          font-weight: 600;
+        }
+        .status {
+          margin: 8px 0 0;
+          font-size: 13px;
+          color: var(--ink);
+        }
+        .footer {
+          margin-top: 24px;
+          font-size: 11px;
+          color: var(--muted);
+        }
+        @media print {
+          body { background: #fff; }
+          .sheet { box-shadow: none; border: none; margin: 0; padding: 0; }
+          .header { border-bottom: 1px solid var(--ink); }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="sheet">
+        <div class="header">
+          <div>
+            <div class="title">${t('export_title')}</div>
+            <div class="status">${t('export_subtitle')}</div>
+          </div>
+          <div class="meta">
+            ${t('export_statement_date')}: ${data.statementDate}<br/>
+            ${t('export_year_label')}: ${year}
+          </div>
+        </div>
+
+        <h2>${t('export_section_summary')}</h2>
+        <table>
+          ${rowHtml(data.summaryRows)}
+        </table>
+
+        <h2>${t('export_section_income')}</h2>
+        <table>
+          ${rowHtml(data.incomeRows)}
+        </table>
+
+        <h2>${t('export_section_deductions')}</h2>
+        <table>
+          ${rowHtml(data.deductionRows)}
+        </table>
+
+        <h2>${t('export_section_ksk')}</h2>
+        <table>
+          ${rowHtml(data.kskRows)}
+        </table>
+
+        <div class="footer">
+          ${t('export_footer_note')}
+        </div>
+      </div>
+    </body>
+    </html>`);
+  w.document.close();
+  setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+}
+
 function updateSettingsUI() {
   ['dark','light','system'].forEach(t => {
     document.getElementById(`themeBtn-${t}`)?.classList.toggle('active', _settings.theme === t);
@@ -6110,6 +6780,12 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 applyTheme();
 applyLanguage();
 updateSettingsUI();
+if (typeof buildMonthGrid === 'function' && !document.querySelector('#monthGrid .month-cell')) {
+  buildMonthGrid();
+  if (typeof applyStartMonth === 'function') applyStartMonth();
+  if (typeof updateMonthGridLabels === 'function') updateMonthGridLabels();
+}
+if (typeof updatePauschaleEligibility === 'function') updatePauschaleEligibility();
 </script>
 </body>
 </html>
